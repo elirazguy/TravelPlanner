@@ -12,16 +12,17 @@ import { PublicLandingPage } from "@/components/PublicLandingPage";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const user = await getSession();
-  if (!user) {
-    return <PublicLandingPage />;
-  }
-
+  let user;
   let trips: any[] = [];
   let allTrips: any[] = [];
   let dbError = "";
 
   try {
+    user = await getSession();
+    if (!user) {
+      return <PublicLandingPage />;
+    }
+
     // Auto-archive trips whose end date has passed.
     await prisma.trip.updateMany({
       where: { userId: user.id, status: { not: "ARCHIVED" }, endDate: { lt: new Date() } },
