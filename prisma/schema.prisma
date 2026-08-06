@@ -137,6 +137,7 @@ model Document {
   fileUrl      String // public URL path
   fileType     String // MIME type
   sizeBytes    Int
+  fileData     Bytes? // Store the actual file binary data in the database
   tag          String   @default("OTHER") // FLIGHT | HOTEL | VISA | INSURANCE | RENTAL | TICKET | PASSPORT | ITINERARY | OTHER
   uploadedAt   DateTime @default(now())
 

@@ -1,14 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
-import crypto from "crypto";
 
 import { processDocumentWithGemini } from "@/lib/doc-parser";
 
 type Params = { params: Promise<{ id: string }> };
-
-const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
 
 // POST /api/trips/[id]/documents — multipart upload of an unlimited number of
 // files, each tagged for the Documents Vault.
@@ -26,28 +21,33 @@ export async function POST(req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: "No files provided" }, { status: 400 });
   }
 
-  await mkdir(UPLOAD_DIR, { recursive: true });
-
   const created = [];
   for (const file of files) {
     if (!(file instanceof File)) continue;
     const bytes = Buffer.from(await file.arrayBuffer());
     const safeBase = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-    const stored = `${tripId}_${crypto.randomUUID()}_${safeBase}`;
-    await writeFile(path.join(UPLOAD_DIR, stored), bytes);
-
+    
+    // Create the document first to get the auto-generated ID
     const doc = await prisma.document.create({
       data: {
         tripId,
-        fileName: stored,
+        fileName: safeBase,
         originalName: file.name,
-        fileUrl: `/uploads/${stored}`,
+        fileUrl: "", // We'll update this next
         fileType: file.type || "application/octet-stream",
         sizeBytes: bytes.length,
+        fileData: bytes, // Save binary in DB!
         tag,
       },
     });
-    created.push(doc);
+
+    // Update the URL to point to our new DB-serving endpoint
+    const finalDoc = await prisma.document.update({
+      where: { id: doc.id },
+      data: { fileUrl: `/api/documents/${doc.id}` }
+    });
+
+    created.push(finalDoc);
 
     // Auto-extract hotel / flight info synchronously so it's ready when upload completes
     await processDocumentWithGemini(tripId, tag, bytes, file.type, file.name);
