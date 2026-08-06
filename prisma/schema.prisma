@@ -1,0 +1,277 @@
+// Voyage Travel Planner — relational schema
+// Datasource: SQLite for a zero-config, self-contained reference build.
+// Swap `provider` to "postgresql" and update DATABASE_URL for production.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Trip — the central entity. Everything else hangs off a Trip.
+// ─────────────────────────────────────────────────────────────────────────────
+model Trip {
+  id           String   @id @default(cuid())
+  userId       String?
+  user         UserAccount? @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title        String
+  destination  String // e.g. "Tokyo, Japan"
+  country      String
+  coverImage   String? // URL for the archive grid card
+  startDate    DateTime
+  endDate      DateTime
+  status       String   @default("PLANNING") // PLANNING | UPCOMING | ARCHIVED
+  isPublic     Boolean  @default(false)
+  cloneCount   Int      @default(0)
+  inviteCode   String?  @unique @default(cuid())
+  notes        String?
+  // Map defaults — center the custom Google Map on the destination.
+  mapCenterLat Float?
+  mapCenterLng Float?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  days           Day[]
+  documents      Document[]
+  hotels         Hotel[]
+  flights        Flight[]
+  savedPlaces    SavedPlace[]
+  transportation Transportation[]
+  consultResults ConsultResult[]
+  collaborators  TripCollaborator[]
+
+  @@index([status])
+}
+
+model TripCollaborator {
+  id        String      @id @default(cuid())
+  tripId    String
+  trip      Trip        @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  userId    String
+  user      UserAccount @relation(fields: [userId], references: [id], onDelete: Cascade)
+  joinedAt  DateTime    @default(now())
+
+  @@unique([tripId, userId])
+  @@index([tripId])
+  @@index([userId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ConsultResult — persisted AI consultant output per trip per skill
+// (analyzer / packing). Generated once and kept until a change is requested,
+// so re-opening the page doesn't regenerate it.
+// ─────────────────────────────────────────────────────────────────────────────
+model ConsultResult {
+  id        String   @id @default(cuid())
+  tripId    String
+  trip      Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  userId    String?
+  user      UserAccount? @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skill     String // "analyzer" | "packing"
+  content   String
+  updatedAt DateTime @updatedAt
+
+  @@unique([tripId, skill, userId])
+  @@index([tripId])
+  @@index([userId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Day — one day of the itinerary. Holds the color used for map markers.
+// ─────────────────────────────────────────────────────────────────────────────
+model Day {
+  id        String   @id @default(cuid())
+  tripId    String
+  trip      Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  date      DateTime
+  dayNumber Int // 1-based order within the trip
+  colorHex  String   @default("#ef4444") // marker color for this day on the map
+  notes     String?
+
+  events      Event[]
+  savedPlaces SavedPlace[]
+
+  @@unique([tripId, dayNumber])
+  @@index([tripId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Event — a scheduled activity within a Day. Sorted chronologically by startTime.
+// Locations here are synced to the trip's Google Map.
+// ─────────────────────────────────────────────────────────────────────────────
+model Event {
+  id           String   @id @default(cuid())
+  dayId        String
+  day          Day      @relation(fields: [dayId], references: [id], onDelete: Cascade)
+  title        String
+  description  String?
+  startTime    String? // "HH:mm" — kept as string for simple timeline sorting
+  endTime      String?
+  category     String   @default("ACTIVITY") // ACTIVITY | FOOD | TRANSPORT | LODGING | SIGHTSEEING | OTHER
+  locationName String?
+  address      String?
+  lat          Float?
+  lng          Float?
+  placeId      String? // Google Places place_id when sourced from Places API
+  orderIndex   Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  @@index([dayId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Document — uploaded files (tickets, confirmations, visas) with a tag taxonomy.
+// ─────────────────────────────────────────────────────────────────────────────
+model Document {
+  id           String   @id @default(cuid())
+  tripId       String
+  trip         Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  fileName     String // stored filename on disk
+  originalName String // user's original filename
+  fileUrl      String // public URL path
+  fileType     String // MIME type
+  sizeBytes    Int
+  tag          String   @default("OTHER") // FLIGHT | HOTEL | VISA | INSURANCE | RENTAL | TICKET | PASSPORT | ITINERARY | OTHER
+  uploadedAt   DateTime @default(now())
+
+  @@index([tripId])
+  @@index([tag])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Hotel — accommodations, broken down by stay dates, with full contact details.
+// ─────────────────────────────────────────────────────────────────────────────
+model Hotel {
+  id                 String    @id @default(cuid())
+  tripId             String
+  trip               Trip      @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  name               String
+  address            String?
+  phone              String?
+  website            String?
+  checkInDate        DateTime?
+  checkOutDate       DateTime?
+  confirmationNumber String?
+  lat                Float?
+  lng                Float?
+  notes              String?
+  createdAt          DateTime  @default(now())
+
+  @@index([tripId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Flight — flight numbers monitored live via a flight-tracking API.
+// Static fields are stored; live status is fetched on demand and cached.
+// ─────────────────────────────────────────────────────────────────────────────
+model Flight {
+  id               String   @id @default(cuid())
+  tripId           String
+  trip             Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  flightNumber     String // IATA flight number, e.g. "BA245"
+  airline          String?
+  departureAirport String? // IATA code
+  arrivalAirport   String? // IATA code
+  flightDate       DateTime
+  notes            String?
+  createdAt        DateTime @default(now())
+
+  @@index([tripId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SavedPlace — places imported from the user's Google "Saved Places", which can
+// be assigned to a specific Day in the planner.
+// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// Transportation — ground/rail/road transfer entries for a trip.
+// type: CAR_RENTAL | BUS | TRAIN | SHUTTLE | TAXI | PRIVATE_DRIVER
+// ─────────────────────────────────────────────────────────────────────────────
+model Transportation {
+  id            String    @id @default(cuid())
+  tripId        String
+  trip          Trip      @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  type          String    // CAR_RENTAL | BUS | TRAIN | SHUTTLE | TAXI | PRIVATE_DRIVER
+  date          DateTime?
+  fromLocation  String?
+  toLocation    String?
+  departureTime String?
+  arrivalTime   String?
+  company       String?
+  reference     String?   // route/line number, confirmation number, booking ref
+  vehicle       String?   // vehicle type (car rental)
+  documents     String?   // required documents (car rental)
+  contactName   String?
+  contactPhone  String?
+  notes         String?
+  createdAt     DateTime  @default(now())
+
+  @@index([tripId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PackingItem — permanent "always bring" items stored globally (not per trip).
+// ─────────────────────────────────────────────────────────────────────────────
+model PackingItem {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      UserAccount? @relation(fields: [userId], references: [id], onDelete: Cascade)
+  text      String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+model SavedPlace {
+  id        String  @id @default(cuid())
+  tripId    String
+  trip      Trip    @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  name      String
+  address   String?
+  lat       Float?
+  lng       Float?
+  placeId   String?
+  category  String? // HOTEL | ATTRACTION | ACTIVITY | FOOD | OTHER
+  listName  String? // source list name (e.g. a Google Takeout saved list)
+  note      String?
+  assignedDayId String?
+  assignedDay   Day? @relation(fields: [assignedDayId], references: [id], onDelete: SetNull)
+
+  @@index([tripId])
+  @@index([assignedDayId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// UserAccount — stores OAuth tokens for Google / Gmail integration securely.
+// ─────────────────────────────────────────────────────────────────────────────
+model UserAccount {
+  id                 String    @id @default(cuid())
+  email              String?   @unique
+  name               String?
+  picture            String?
+  passwordHash       String?
+  googleAccessToken  String?
+  googleRefreshToken String?
+  tokenExpiresAt     DateTime?
+  updatedAt          DateTime  @updatedAt
+
+  trips              Trip[]
+  collaborations     TripCollaborator[]
+  consultResults     ConsultResult[]
+  packingItems       PackingItem[]
+  sessions           Session[]
+}
+
+model Session {
+  id        String      @id @default(cuid())
+  userId    String
+  user      UserAccount @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime    @default(now())
+
+  @@index([userId])
+}
