@@ -1,23 +1,32 @@
 import { PrismaClient } from "@prisma/client";
 
 function getConnectionString(): string | undefined {
-  let url = process.env.DATABASE_URL;
-  if (!url) return undefined;
+  const urlStr = process.env.DATABASE_URL;
+  if (!urlStr) return undefined;
 
-  // Revert any port 6543 back to official working Supabase port 5432
-  if (url.includes(".supabase.co:6543")) {
-    url = url.replace(".supabase.co:6543", ".supabase.co:5432");
+  try {
+    const url = new URL(urlStr);
+
+    // Revert any port 6543 back to official working Supabase port 5432
+    if (url.port === "6543") {
+      url.port = "5432";
+    }
+
+    // Clean up pgbouncer param if present
+    url.searchParams.delete("pgbouncer");
+
+    // Ensure timeouts for reliable Vercel cold starts
+    if (!url.searchParams.has("connect_timeout")) {
+      url.searchParams.set("connect_timeout", "30");
+    }
+    if (!url.searchParams.has("pool_timeout")) {
+      url.searchParams.set("pool_timeout", "30");
+    }
+
+    return url.toString();
+  } catch (e) {
+    return urlStr;
   }
-
-  // Clean up pgbouncer param if present
-  url = url.replace("?pgbouncer=true", "").replace("&pgbouncer=true", "");
-
-  // Ensure connect_timeout=30 and pool_timeout=30 for reliable Vercel cold starts
-  if (!url.includes("connect_timeout=")) {
-    url += (url.includes("?") ? "&" : "?") + "connect_timeout=30&pool_timeout=30";
-  }
-
-  return url;
 }
 
 const dbUrl = getConnectionString();
