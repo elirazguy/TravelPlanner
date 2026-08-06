@@ -21,11 +21,15 @@ export async function POST(req: NextRequest, { params }: Params) {
   const { id: tripId } = await params;
   const trip = await prisma.trip.findUnique({
     where: { id: tripId },
-    select: { destination: true, country: true, mapCenterLat: true, mapCenterLng: true },
+    select: { destination: true, country: true, mapCenterLat: true, mapCenterLng: true, savedPlaces: { select: { placeId: true } } },
   });
   if (!trip) {
     return NextResponse.json({ error: "Trip not found" }, { status: 404 });
   }
+
+  const existingPlaceIds = new Set(
+    trip.savedPlaces.map((sp) => sp.placeId).filter(Boolean)
+  );
 
   const body = await req.json();
   const history: ChatTurn[] = Array.isArray(body.history) ? body.history : [];
@@ -64,8 +68,9 @@ export async function POST(req: NextRequest, { params }: Params) {
       ? { lat: trip.mapCenterLat, lng: trip.mapCenterLng }
       : undefined;
 
-  const enriched: EnrichedPlace[] = await Promise.all(
-    result.places.map(async (p): Promise<EnrichedPlace> => {
+  const enriched: EnrichedPlace[] = [];
+  await Promise.all(
+    result.places.map(async (p): Promise<void> => {
       try {
         const hits = await searchPlaces(
           `${p.name} ${trip.destination}`,
@@ -73,18 +78,27 @@ export async function POST(req: NextRequest, { params }: Params) {
         );
         const top = hits[0];
         if (top) {
-          return {
+          // If this placeId is already saved in the trip, skip it entirely
+          if (top.placeId && existingPlaceIds.has(top.placeId)) {
+            return;
+          }
+          
+          enriched.push({
             ...p,
             address: top.address,
             lat: top.lat,
             lng: top.lng,
             placeId: top.placeId,
-          };
+          });
+          return;
         }
       } catch {
-        // ignore — keep the name-only place
+        // ignore
       }
-      return p;
+      
+      // If we couldn't resolve it via Google Places, or it has no placeId,
+      // just return the raw extracted name (we can't deduplicate it accurately, but we allow it)
+      enriched.push(p);
     })
   );
 

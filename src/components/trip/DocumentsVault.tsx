@@ -55,13 +55,18 @@ export function DocumentsVault({ trip }: { trip: TripDTO }) {
     const fd = new FormData();
     fd.append("tag", uploadTag);
     Array.from(files).forEach((f) => fd.append("files", f));
-    await fetch(`/api/trips/${trip.id}/documents`, {
+    const res = await fetch(`/api/trips/${trip.id}/documents`, {
       method: "POST",
       body: fd,
     });
     setUploading(false);
-    if (fileRef.current) fileRef.current.value = "";
-    router.refresh();
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      alert(`שגיאה בהעלאת המסמך: ${data.error || res.statusText}`);
+    } else {
+      if (fileRef.current) fileRef.current.value = "";
+      router.refresh();
+    }
   }
 
   return (
