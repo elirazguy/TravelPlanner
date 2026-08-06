@@ -49,10 +49,11 @@ export async function POST(req: NextRequest) {
         picture: user.picture,
       },
     });
-  } catch (error) {
-    console.error("Login error:", error);
+  } catch (error: any) {
+    console.error("Login error detail:", error);
+    const errorMessage = error?.message || "שגיאת שרת פנימית";
     return NextResponse.json(
-      { error: "אירעה שגיאה בהתחברות" },
+      { error: `אירעה שגיאה בהתחברות: ${errorMessage}` },
       { status: 500 }
     );
   }
