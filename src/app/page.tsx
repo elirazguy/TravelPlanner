@@ -17,23 +17,51 @@ export default async function HomePage() {
     return <PublicLandingPage />;
   }
 
-  // Auto-archive trips whose end date has passed.
-  await prisma.trip.updateMany({
-    where: { userId: user.id, status: { not: "ARCHIVED" }, endDate: { lt: new Date() } },
-    data: { status: "ARCHIVED" },
-  });
+  let trips: any[] = [];
+  let allTrips: any[] = [];
+  let dbError = "";
 
-  const trips = await prisma.trip.findMany({
-    where: {
-      status: { not: "ARCHIVED" },
-      OR: [
-        { userId: user.id },
-        { collaborators: { some: { userId: user.id } } },
-      ],
-    },
-    orderBy: { startDate: "asc" },
-    include: { _count: { select: { days: true, documents: true } } },
-  });
+  try {
+    // Auto-archive trips whose end date has passed.
+    await prisma.trip.updateMany({
+      where: { userId: user.id, status: { not: "ARCHIVED" }, endDate: { lt: new Date() } },
+      data: { status: "ARCHIVED" },
+    });
+
+    trips = await prisma.trip.findMany({
+      where: {
+        status: { not: "ARCHIVED" },
+        OR: [
+          { userId: user.id },
+          { collaborators: { some: { userId: user.id } } },
+        ],
+      },
+      orderBy: { startDate: "asc" },
+      include: { _count: { select: { days: true, documents: true } } },
+    });
+
+    // Resolve every trip's country to ISO numeric codes for the wood world map:
+    // archived (past) trips are "visited", everything else is "planned".
+    allTrips = await prisma.trip.findMany({ 
+      where: { userId: user.id },
+      select: { country: true, status: true } 
+    });
+  } catch (error: any) {
+    console.error("Database error in page.tsx:", error);
+    dbError = error?.message || String(error);
+  }
+
+  if (dbError) {
+    return (
+      <div className="p-8 max-w-2xl mx-auto mt-12 bg-red-50 border border-red-200 rounded-xl" dir="rtl">
+        <h2 className="text-xl font-bold text-red-600 mb-4">שגיאת התחברות למסד הנתונים</h2>
+        <p className="text-sm text-zinc-700 mb-4">השרת לא הצליח לשלוף את הנתונים שלך ממסד הנתונים של Supabase.</p>
+        <div className="bg-red-100 p-4 rounded text-left text-xs font-mono text-red-800 overflow-auto whitespace-pre-wrap" dir="ltr">
+          {dbError}
+        </div>
+      </div>
+    );
+  }
 
   const serialized = trips.map((t) => ({
     ...t,
@@ -42,12 +70,6 @@ export default async function HomePage() {
     isShared: t.userId !== user.id,
   }));
 
-  // Resolve every trip's country to ISO numeric codes for the wood world map:
-  // archived (past) trips are "visited", everything else is "planned".
-  const allTrips = await prisma.trip.findMany({ 
-    where: { userId: user.id },
-    select: { country: true, status: true } 
-  });
   const visitedNums = new Set<string>();
   const plannedNums = new Set<string>();
   for (const t of allTrips) {
