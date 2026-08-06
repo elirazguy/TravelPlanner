@@ -3,7 +3,21 @@
 import Link from "next/link";
 import { Button, Input } from "@/components/ui";
 import { useState } from "react";
-import { Loader2, Mail, Lock, User, ArrowLeft, Eye, EyeOff } from "lucide-react";
+import {
+  Loader2,
+  Mail,
+  Lock,
+  User,
+  Eye,
+  EyeOff,
+  Compass,
+  Plane,
+  Hotel,
+  FileText,
+  Sparkles,
+  ShieldCheck,
+  Globe2,
+} from "lucide-react";
 
 export default function LoginPage() {
   const [mode, setMode] = useState<"login" | "register">("login");
@@ -55,26 +69,122 @@ export default function LoginPage() {
 
   return (
     <div className="fixed inset-0 z-50 flex bg-[#fbfcfd] text-zinc-900 overflow-y-auto" dir="rtl">
-      {/* Right side: Branding & Hero (Hidden on small screens) */}
-      <div className="hidden w-1/2 flex-col items-center justify-center bg-gradient-to-br from-[#0a192f] via-[#112240] to-[#020c1b] p-12 text-center lg:flex relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900/20 via-transparent to-transparent pointer-events-none" />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/Logo.png?v=2" alt="Logo" className="mb-6 h-32 w-32 drop-shadow-2xl" />
-        <h1 className="font-display text-4xl font-bold text-white mb-3">
-          ברוכים הבאים ל-TravelPlanner
-        </h1>
-        <p className="text-zinc-400 text-lg max-w-md leading-relaxed">
-          תכנון, ארגון וניהול הטיולים שלך בצורה חכמה, מהירה ומהנה
-        </p>
+      {/* Right side: Hero & Product Presentation (Visible on desktop) */}
+      <div className="hidden w-1/2 flex-col justify-between bg-gradient-to-br from-[#0a192f] via-[#0d213a] to-[#020c1b] p-10 lg:p-14 text-right lg:flex relative overflow-hidden">
+        {/* Background glow effects */}
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 h-96 w-96 rounded-full bg-blue-500/10 blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-96 w-96 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
+
+        {/* Top Header Branding */}
+        <div className="relative z-10 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/Logo.png?v=2" alt="TravelPlanner Logo" className="h-12 w-12 drop-shadow-xl" />
+            <div>
+              <span className="text-xl font-extrabold tracking-tight text-white">TravelPlanner</span>
+              <span className="block text-[11px] text-blue-300 font-medium tracking-wide">
+                Smart Itinerary & Voyage Platform
+              </span>
+            </div>
+          </div>
+          <span className="rounded-full bg-blue-500/10 border border-blue-400/20 px-3 py-1 text-xs font-semibold text-blue-300 flex items-center gap-1.5">
+            <Globe2 size={13} className="text-blue-400" />
+            מערכת חכמה לניהול טיולים
+          </span>
+        </div>
+
+        {/* Hero Headline & Explanation */}
+        <div className="relative z-10 my-auto max-w-xl pr-2">
+          <div className="inline-flex items-center gap-2 rounded-full bg-white/10 backdrop-blur-md px-3.5 py-1.5 text-xs font-semibold text-blue-200 border border-white/10 mb-5">
+            <Sparkles size={14} className="text-yellow-400" />
+            תכנון טיולים מבוסס AI, מסמכים ומפות
+          </div>
+
+          <h1 className="font-display text-4xl xl:text-5xl font-extrabold text-white leading-tight mb-4">
+            כל הטיול שלך, <br />
+            <span className="bg-gradient-to-r from-blue-400 via-teal-300 to-emerald-400 bg-clip-text text-transparent">
+              במקום אחד חכם ומאורגן.
+            </span>
+          </h1>
+
+          <p className="text-zinc-300 text-base leading-relaxed mb-8">
+            TravelPlanner היא אפליקציה מתקדמת לתכנון וניהול חופשות וטיולים. 
+            המערכת מרכזת את מסלול הטיול היומי, הזמנות המלונות והטיסות, מסמכי הנסיעה ועוזר AI אישי שממליץ על אטרקציות ובונה רשימות ציוד.
+          </p>
+
+          {/* Feature Grid Badges */}
+          <div className="grid grid-cols-2 gap-3.5">
+            <div className="flex items-start gap-3 rounded-2xl bg-white/[0.06] backdrop-blur-md p-3.5 border border-white/10">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-500/20 text-blue-400">
+                <Compass size={18} />
+              </div>
+              <div>
+                <h3 className="text-xs font-bold text-white">מסלולים ומפות</h3>
+                <p className="text-[11px] text-zinc-400 leading-tight">לו"ז יומי מפורט עם מפת יעדים אינטראקטיבית</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 rounded-2xl bg-white/[0.06] backdrop-blur-md p-3.5 border border-white/10">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-400">
+                <Plane size={18} />
+              </div>
+              <div>
+                <h3 className="text-xs font-bold text-white">טיסות ומלונות</h3>
+                <p className="text-[11px] text-zinc-400 leading-tight">סנכרון הזמנות ומעקב בזמן אמת</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 rounded-2xl bg-white/[0.06] backdrop-blur-md p-3.5 border border-white/10">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-500/20 text-amber-400">
+                <FileText size={18} />
+              </div>
+              <div>
+                <h3 className="text-xs font-bold text-white">כספת מסמכים</h3>
+                <p className="text-[11px] text-zinc-400 leading-tight">אחסון מאובטח לדרכונים, כרטיסים ואישורים</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 rounded-2xl bg-white/[0.06] backdrop-blur-md p-3.5 border border-white/10">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-purple-500/20 text-purple-400">
+                <Sparkles size={18} />
+              </div>
+              <div>
+                <h3 className="text-xs font-bold text-white">עוזר AI אישי</h3>
+                <p className="text-[11px] text-zinc-400 leading-tight">המלצות מותאמות אישית וייעוץ מסלולים</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer info & Security assurance */}
+        <div className="relative z-10 flex items-center justify-between border-t border-white/10 pt-4 text-xs text-zinc-400">
+          <span className="flex items-center gap-1.5">
+            <ShieldCheck size={16} className="text-emerald-400" />
+            התחברות מאובטחת ושמירה מלאה על פרטיות הנתונים
+          </span>
+          <div className="flex items-center gap-4 text-zinc-400">
+            <Link href="/privacy?from=login" className="hover:text-white transition-colors">
+              מדיניות פרטיות
+            </Link>
+            <span>•</span>
+            <Link href="/terms?from=login" className="hover:text-white transition-colors">
+              תנאי שימוש
+            </Link>
+          </div>
+        </div>
       </div>
 
-      {/* Left side: Form */}
+      {/* Left side: Form & Mobile Hero Explanation */}
       <div className="flex w-full flex-col justify-center px-6 py-10 lg:w-1/2 xl:px-20 bg-gradient-to-br from-[#fcfdfd] to-[#f4f7f9]">
         <div className="mx-auto w-full max-w-md">
-          {/* Mobile Logo */}
-          <div className="mb-6 flex justify-center lg:hidden">
+          {/* Mobile Logo & Hero Intro */}
+          <div className="mb-6 text-center lg:hidden">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/Logo.png?v=2" alt="Logo" className="h-16 w-16" />
+            <img src="/Logo.png?v=2" alt="TravelPlanner Logo" className="h-16 w-16 mx-auto mb-3 drop-shadow-md" />
+            <h1 className="text-2xl font-extrabold text-zinc-900">TravelPlanner</h1>
+            <p className="text-xs text-zinc-600 mt-1 max-w-xs mx-auto">
+              מערכת חכמה לתכנון טיולים, ניהול מסלולים, מלונות, טיסות ומסמכים
+            </p>
           </div>
 
           {/* Mode Switcher Tabs */}
@@ -108,7 +218,7 @@ export default function LoginPage() {
           </h2>
           <p className="mb-6 text-sm text-zinc-500">
             {mode === "login"
-              ? "הכנס את אימייל והסיסמה שלך כדי להיכנס"
+              ? "הכנס את האימייל והסיסמה שלך כדי להיכנס למערכת"
               : "מלא את הפרטים כדי לפתוח חשבון בחינם"}
           </p>
 
@@ -245,3 +355,4 @@ export default function LoginPage() {
     </div>
   );
 }
+
