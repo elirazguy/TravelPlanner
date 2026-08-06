@@ -70,10 +70,11 @@ export async function POST(req: NextRequest) {
         picture: user.picture,
       },
     });
-  } catch (error) {
-    console.error("Register error:", error);
+  } catch (error: any) {
+    console.error("Register error detail:", error);
+    const errorMessage = error?.message || "שגיאת שרת פנימית";
     return NextResponse.json(
-      { error: "אירעה שגיאה ברישום המשתמש" },
+      { error: `אירעה שגיאה ברישום המשתמש: ${errorMessage}` },
       { status: 500 }
     );
   }
