@@ -28,7 +28,6 @@ export function TopNav() {
       const fromParam = search.get("from");
       if (
         pathname === "/login" ||
-        (pathname === "/" && !user) ||
         ((pathname === "/privacy" || pathname === "/terms") && (!user || fromParam === "home" || fromParam === "login"))
       ) {
         setHideNav(true);
