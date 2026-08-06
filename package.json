@@ -2,7 +2,7 @@
   "name": "voyage-travel-planner",
   "version": "1.0.0",
   "private": true,
-  "description": "A professional, comprehensive web application for planning international vacations and trips.",
+  "description": "Smart travel planner application with Next.js, Prisma, and Supabase PostgreSQL.",
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
