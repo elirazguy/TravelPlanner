@@ -104,7 +104,23 @@ for (const c of COUNTRIES) {
 // Resolve a free-text country name (Hebrew or English) to its entry, or null.
 export function resolveCountry(input: string | null | undefined): CountryEntry | null {
   if (!input) return null;
-  return LOOKUP.get(norm(input)) ?? null;
+  const normalizedInput = norm(input);
+  
+  // 1. Try exact match first
+  if (LOOKUP.has(normalizedInput)) {
+    return LOOKUP.get(normalizedInput)!;
+  }
+  
+  // 2. Try partial match (does the input contain the country name?)
+  // Sort by length descending so longer aliases match first (e.g. 'United States' before 'United')
+  const allAliases = Array.from(LOOKUP.keys()).sort((a, b) => b.length - a.length);
+  for (const alias of allAliases) {
+    if (normalizedInput.includes(alias)) {
+      return LOOKUP.get(alias)!;
+    }
+  }
+  
+  return null;
 }
 
 const NUM_TO_ISO2 = new Map(COUNTRIES.map((c) => [c.num, c.iso2]));

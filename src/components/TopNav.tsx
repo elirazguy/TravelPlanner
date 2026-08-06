@@ -11,10 +11,10 @@ interface UserProfile {
   picture?: string | null;
 }
 
-export function TopNav() {
+export function TopNav({ initialUser }: { initialUser?: UserProfile | null }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [user, setUser] = useState<UserProfile | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(initialUser || null);
   const [hideNav, setHideNav] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
