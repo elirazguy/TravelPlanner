@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
-import { redirect } from "next/navigation";
 import { TripCard } from "@/components/TripCard";
 import { NewTripModal } from "@/components/NewTripModal";
 import { EmptyState } from "@/components/ui";
@@ -8,13 +7,14 @@ import { SetBackground } from "@/components/background/BackgroundProvider";
 import { WoodWorldMap } from "@/components/WoodWorldMap";
 import { resolveCountry } from "@/lib/countries";
 import { MapPinned } from "lucide-react";
+import { PublicLandingPage } from "@/components/PublicLandingPage";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const user = await getSession();
   if (!user) {
-    redirect("/login");
+    return <PublicLandingPage />;
   }
 
   // Auto-archive trips whose end date has passed.

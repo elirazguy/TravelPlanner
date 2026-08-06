@@ -6,6 +6,7 @@ export function middleware(request: NextRequest) {
   
   // Public paths
   if (
+    pathname === "/" ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/api/auth/") ||
     pathname === "/login" ||
