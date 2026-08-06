@@ -12,7 +12,7 @@ import { PublicLandingPage } from "@/components/PublicLandingPage";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  let user;
+  let user: any;
   let trips: any[] = [];
   let allTrips: any[] = [];
   let dbError = "";
