@@ -64,10 +64,8 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const fileName = `cover-${Date.now()}.${ext}`;
-  const dir = join(process.cwd(), "public", "uploads", "covers");
-  await mkdir(dir, { recursive: true });
-  await writeFile(join(dir, fileName), buf);
+  const base64Data = buf.toString("base64");
+  const dataUrl = `data:image/${ext};base64,${base64Data}`;
 
-  return NextResponse.json({ url: `/uploads/covers/${fileName}`, method });
+  return NextResponse.json({ url: dataUrl, method });
 }

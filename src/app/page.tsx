@@ -29,24 +29,27 @@ export default async function HomePage() {
       data: { status: "ARCHIVED" },
     });
 
-    trips = await prisma.trip.findMany({
-      where: {
-        status: { not: "ARCHIVED" },
-        OR: [
-          { userId: user.id },
-          { collaborators: { some: { userId: user.id } } },
-        ],
-      },
-      orderBy: { startDate: "asc" },
-      include: { _count: { select: { days: true, documents: true } } },
-    });
+    // Fetch the active trips and the list of all trips (for the map) in parallel
+    const [fetchedTrips, fetchedAllTrips] = await Promise.all([
+      prisma.trip.findMany({
+        where: {
+          status: { not: "ARCHIVED" },
+          OR: [
+            { userId: user.id },
+            { collaborators: { some: { userId: user.id } } },
+          ],
+        },
+        orderBy: { startDate: "asc" },
+        include: { _count: { select: { days: true, documents: true } } },
+      }),
+      prisma.trip.findMany({ 
+        where: { userId: user.id },
+        select: { country: true, status: true } 
+      })
+    ]);
 
-    // Resolve every trip's country to ISO numeric codes for the wood world map:
-    // archived (past) trips are "visited", everything else is "planned".
-    allTrips = await prisma.trip.findMany({ 
-      where: { userId: user.id },
-      select: { country: true, status: true } 
-    });
+    trips = fetchedTrips;
+    allTrips = fetchedAllTrips;
   } catch (error: any) {
     console.error("Database error in page.tsx:", error);
     dbError = error?.message || String(error);
