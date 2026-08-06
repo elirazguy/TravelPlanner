@@ -93,68 +93,76 @@ export default function LoginPage() {
           </span>
         </div>
 
-        {/* Hero Headline & Explanation */}
-        <div className="relative z-10 my-auto max-w-xl pr-2">
-          <div className="inline-flex items-center gap-2 rounded-full bg-white/10 backdrop-blur-md px-3.5 py-1.5 text-xs font-semibold text-blue-200 border border-white/10 mb-5">
-            <Sparkles size={14} className="text-yellow-400" />
-            תכנון טיולים מבוסס AI, מסמכים ומפות
+          {/* Hero Headline & Explanation */}
+          <div className="relative z-10 my-auto max-w-xl pr-2">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/10 backdrop-blur-md px-3.5 py-1.5 text-xs font-semibold text-blue-200 border border-white/10 mb-4">
+              <Sparkles size={14} className="text-yellow-400" />
+              תכנון טיולים מבוסס AI, מסמכים ומפות
+            </div>
+
+            <h1 className="font-display text-4xl xl:text-5xl font-extrabold text-white leading-tight mb-3">
+              TravelPlanner <br />
+              <span className="bg-gradient-to-r from-blue-400 via-teal-300 to-emerald-400 bg-clip-text text-transparent">
+                כל הטיול שלך במקום אחד.
+              </span>
+            </h1>
+
+            <p className="text-zinc-300 text-sm xl:text-base leading-relaxed mb-6">
+              TravelPlanner היא אפליקציה מתקדמת לתכנון וניהול חופשות וטיולים. 
+              המערכת מרכזת את מסלול הטיול היומי, הזמנות המלונות והטיסות, מסמכי הנסיעה ועוזר AI אישי שממליץ על אטרקציות ובונה רשימות ציוד.
+            </p>
+
+            {/* Feature Grid Badges */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex items-start gap-3 rounded-2xl bg-white/[0.06] backdrop-blur-md p-3 border border-white/10">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-500/20 text-blue-400">
+                  <Compass size={18} />
+                </div>
+                <div>
+                  <h3 className="text-xs font-bold text-white">מסלולים ומפות</h3>
+                  <p className="text-[11px] text-zinc-400 leading-tight">לו"ז יומי מפורט עם מפת יעדים אינטראקטיבית</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 rounded-2xl bg-white/[0.06] backdrop-blur-md p-3 border border-white/10">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-400">
+                  <Plane size={18} />
+                </div>
+                <div>
+                  <h3 className="text-xs font-bold text-white">טיסות ומלונות</h3>
+                  <p className="text-[11px] text-zinc-400 leading-tight">סנכרון הזמנות ומעקב בזמן אמת</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 rounded-2xl bg-white/[0.06] backdrop-blur-md p-3 border border-white/10">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-500/20 text-amber-400">
+                  <FileText size={18} />
+                </div>
+                <div>
+                  <h3 className="text-xs font-bold text-white">כספת מסמכים</h3>
+                  <p className="text-[11px] text-zinc-400 leading-tight">אחסון מאובטח לדרכונים, כרטיסים ואישורים</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 rounded-2xl bg-white/[0.06] backdrop-blur-md p-3 border border-white/10">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-purple-500/20 text-purple-400">
+                  <Sparkles size={18} />
+                </div>
+                <div>
+                  <h3 className="text-xs font-bold text-white">עוזר AI אישי</h3>
+                  <p className="text-[11px] text-zinc-400 leading-tight">המלצות מותאמות אישית וייעוץ מסלולים</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Explicit App Purpose Box for Google OAuth Verification */}
+            <div className="mt-5 rounded-2xl bg-blue-500/10 border border-blue-400/20 p-3.5 text-left" dir="ltr">
+              <h4 className="text-xs font-bold text-blue-300 mb-1">About TravelPlanner</h4>
+              <p className="text-[11px] text-zinc-300 leading-relaxed">
+                TravelPlanner is an all-in-one travel planning application designed to help users organize daily trip itineraries, track flight & hotel bookings, securely store travel documents, and receive AI-assisted vacation recommendations.
+              </p>
+            </div>
           </div>
-
-          <h1 className="font-display text-4xl xl:text-5xl font-extrabold text-white leading-tight mb-4">
-            כל הטיול שלך, <br />
-            <span className="bg-gradient-to-r from-blue-400 via-teal-300 to-emerald-400 bg-clip-text text-transparent">
-              במקום אחד חכם ומאורגן.
-            </span>
-          </h1>
-
-          <p className="text-zinc-300 text-base leading-relaxed mb-8">
-            TravelPlanner היא אפליקציה מתקדמת לתכנון וניהול חופשות וטיולים. 
-            המערכת מרכזת את מסלול הטיול היומי, הזמנות המלונות והטיסות, מסמכי הנסיעה ועוזר AI אישי שממליץ על אטרקציות ובונה רשימות ציוד.
-          </p>
-
-          {/* Feature Grid Badges */}
-          <div className="grid grid-cols-2 gap-3.5">
-            <div className="flex items-start gap-3 rounded-2xl bg-white/[0.06] backdrop-blur-md p-3.5 border border-white/10">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-500/20 text-blue-400">
-                <Compass size={18} />
-              </div>
-              <div>
-                <h3 className="text-xs font-bold text-white">מסלולים ומפות</h3>
-                <p className="text-[11px] text-zinc-400 leading-tight">לו"ז יומי מפורט עם מפת יעדים אינטראקטיבית</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3 rounded-2xl bg-white/[0.06] backdrop-blur-md p-3.5 border border-white/10">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-400">
-                <Plane size={18} />
-              </div>
-              <div>
-                <h3 className="text-xs font-bold text-white">טיסות ומלונות</h3>
-                <p className="text-[11px] text-zinc-400 leading-tight">סנכרון הזמנות ומעקב בזמן אמת</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3 rounded-2xl bg-white/[0.06] backdrop-blur-md p-3.5 border border-white/10">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-500/20 text-amber-400">
-                <FileText size={18} />
-              </div>
-              <div>
-                <h3 className="text-xs font-bold text-white">כספת מסמכים</h3>
-                <p className="text-[11px] text-zinc-400 leading-tight">אחסון מאובטח לדרכונים, כרטיסים ואישורים</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3 rounded-2xl bg-white/[0.06] backdrop-blur-md p-3.5 border border-white/10">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-purple-500/20 text-purple-400">
-                <Sparkles size={18} />
-              </div>
-              <div>
-                <h3 className="text-xs font-bold text-white">עוזר AI אישי</h3>
-                <p className="text-[11px] text-zinc-400 leading-tight">המלצות מותאמות אישית וייעוץ מסלולים</p>
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* Footer info & Security assurance */}
         <div className="relative z-10 flex items-center justify-between border-t border-white/10 pt-4 text-xs text-zinc-400">

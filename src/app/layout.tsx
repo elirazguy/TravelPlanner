@@ -21,9 +21,9 @@ const heebo = Heebo({
 });
 
 export const metadata: Metadata = {
-  title: "TravelPlanner — פלטפורמה חכמה לתכנון טיולים",
+  title: "TravelPlanner — Smart Travel & Itinerary Management",
   description:
-    "תכנן חופשות בינלאומיות: מסלולים, מסמכים, מפות, לוגיסטיקה ויועץ AI.",
+    "TravelPlanner is an all-in-one travel planning platform designed to organize trip itineraries, manage flight schedules and hotel bookings, securely store travel documents, and offer AI vacation recommendations.",
 };
 
 export default function RootLayout({
