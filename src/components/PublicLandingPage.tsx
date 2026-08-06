@@ -37,13 +37,13 @@ export function PublicLandingPage() {
 
           <div className="flex items-center gap-3">
             <Link
-              href="/privacy"
+              href="/privacy?from=home"
               className="hidden text-xs font-semibold text-zinc-600 hover:text-zinc-900 sm:inline-block"
             >
               מדיניות פרטיות
             </Link>
             <Link
-              href="/terms"
+              href="/terms?from=home"
               className="hidden text-xs font-semibold text-zinc-600 hover:text-zinc-900 sm:inline-block"
             >
               תנאי שימוש

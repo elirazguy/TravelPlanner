@@ -25,10 +25,11 @@ export function TopNav() {
   useEffect(() => {
     if (typeof window !== "undefined") {
       const search = new URLSearchParams(window.location.search);
+      const fromParam = search.get("from");
       if (
         pathname === "/login" ||
         (pathname === "/" && !user) ||
-        ((pathname === "/privacy" || pathname === "/terms") && search.get("from") === "login")
+        ((pathname === "/privacy" || pathname === "/terms") && (!user || fromParam === "home" || fromParam === "login"))
       ) {
         setHideNav(true);
         return;

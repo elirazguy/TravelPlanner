@@ -8,10 +8,11 @@ import { Suspense } from "react";
 
 function PrivacyContent() {
   const searchParams = useSearchParams();
-  const fromLogin = searchParams.get("from") === "login";
+  const fromParam = searchParams.get("from");
 
-  const backLink = fromLogin ? "/login" : "/settings";
-  const backText = fromLogin ? "חזרה למסך ההתחברות" : "חזרה להגדרות";
+  const isFromSettings = fromParam === "settings";
+  const backLink = isFromSettings ? "/settings" : "/";
+  const backText = isFromSettings ? "חזרה להגדרות" : "חזרה לדף הבית";
 
   return (
     <>
