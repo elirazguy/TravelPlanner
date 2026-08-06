@@ -177,19 +177,10 @@ export function PublicLandingPage() {
 
       {/* Footer */}
       <footer className="border-t border-zinc-200 bg-white py-6">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-4 text-xs text-zinc-500 sm:flex-row sm:px-6 lg:px-8">
-          <div className="flex items-center gap-2">
+        <div className="mx-auto flex max-w-7xl items-center justify-center px-4 text-xs text-zinc-500">
+          <div className="flex items-center justify-center gap-2">
             <ShieldCheck size={16} className="text-emerald-600" />
             <span>TravelPlanner © 2026 • כל הזכויות שמורות</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <Link href="/privacy" className="hover:text-zinc-900 transition-colors">
-              מדיניות פרטיות
-            </Link>
-            <span>•</span>
-            <Link href="/terms" className="hover:text-zinc-900 transition-colors">
-              תנאי שימוש
-            </Link>
           </div>
         </div>
       </footer>
