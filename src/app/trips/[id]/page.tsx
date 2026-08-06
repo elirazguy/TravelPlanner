@@ -39,7 +39,19 @@ export default async function TripPage({
           savedPlaces: true,
         },
       },
-      documents: { orderBy: { uploadedAt: "desc" } },
+      documents: { 
+        orderBy: { uploadedAt: "desc" },
+        select: {
+          id: true,
+          fileName: true,
+          originalName: true,
+          fileUrl: true,
+          fileType: true,
+          sizeBytes: true,
+          tag: true,
+          uploadedAt: true
+        }
+      },
       hotels: { orderBy: { checkInDate: "asc" } },
       flights: { orderBy: { flightDate: "asc" } },
       transportation: { orderBy: { date: "asc" } },
