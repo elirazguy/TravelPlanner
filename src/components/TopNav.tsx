@@ -25,13 +25,17 @@ export function TopNav() {
   useEffect(() => {
     if (typeof window !== "undefined") {
       const search = new URLSearchParams(window.location.search);
-      if (pathname === "/login" || ((pathname === "/privacy" || pathname === "/terms") && search.get("from") === "login")) {
+      if (
+        pathname === "/login" ||
+        (pathname === "/" && !user) ||
+        ((pathname === "/privacy" || pathname === "/terms") && search.get("from") === "login")
+      ) {
         setHideNav(true);
         return;
       }
     }
     setHideNav(false);
-  }, [pathname]);
+  }, [pathname, user]);
 
   useEffect(() => {
     if (pathname === "/login" || user) return;
