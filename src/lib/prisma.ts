@@ -7,8 +7,11 @@ function getConnectionString(): string | undefined {
   try {
     const url = new URL(urlStr);
 
-    // Clean up pgbouncer param if present
-    url.searchParams.delete("pgbouncer");
+    // If using the Supabase transaction pooler (port 6543), pgbouncer=true is REQUIRED
+    // otherwise Prisma will throw 'prepared statement s0 already exists'
+    if (url.port === "6543") {
+      url.searchParams.set("pgbouncer", "true");
+    }
 
     // Ensure timeouts for reliable Vercel cold starts
     if (!url.searchParams.has("connect_timeout")) {
