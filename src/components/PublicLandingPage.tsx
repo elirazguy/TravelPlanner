@@ -26,7 +26,7 @@ export function PublicLandingPage() {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3.5 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/Logo.png?v=2" alt="TravelPlanner Logo" className="h-10 w-10 drop-shadow-md" />
+            <img src="/Logo.png?v=3" alt="TravelPlanner Logo" className="h-10 w-10 drop-shadow-md rounded-lg object-contain" />
             <div>
               <span className="text-xl font-extrabold tracking-tight text-zinc-900">TravelPlanner</span>
               <span className="block text-[10px] text-blue-600 font-semibold tracking-wide dir-ltr text-right">

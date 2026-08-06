@@ -79,7 +79,7 @@ export default function LoginPage() {
         <div className="relative z-10 flex items-center justify-between">
           <div className="flex items-center gap-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/Logo.png?v=2" alt="TravelPlanner Logo" className="h-12 w-12 drop-shadow-xl" />
+            <img src="/Logo.png?v=3" alt="TravelPlanner Logo" className="h-12 w-12 drop-shadow-xl rounded-xl object-contain" />
             <div>
               <span className="text-xl font-extrabold tracking-tight text-white">TravelPlanner</span>
               <span className="block text-[11px] text-blue-300 font-medium tracking-wide">
