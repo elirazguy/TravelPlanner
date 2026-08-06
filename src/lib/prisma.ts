@@ -7,11 +7,6 @@ function getConnectionString(): string | undefined {
   try {
     const url = new URL(urlStr);
 
-    // Revert any port 6543 back to official working Supabase port 5432
-    if (url.port === "6543") {
-      url.port = "5432";
-    }
-
     // Clean up pgbouncer param if present
     url.searchParams.delete("pgbouncer");
 
