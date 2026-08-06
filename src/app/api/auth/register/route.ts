@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createSession } from "@/lib/session";
-import { hashPassword } from "@/lib/auth-crypto";
+import { hashPassword, validatePasswordStrength } from "@/lib/auth-crypto";
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,9 +14,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!password || typeof password !== "string" || password.length < 6) {
+    const passwordValidation = validatePasswordStrength(password);
+    if (!passwordValidation.valid) {
       return NextResponse.json(
-        { error: "הסיסמה חייבת להכיל לפחות 6 תווים" },
+        { error: passwordValidation.error },
         { status: 400 }
       );
     }

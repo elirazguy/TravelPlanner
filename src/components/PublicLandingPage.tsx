@@ -16,7 +16,8 @@ import {
   User,
   Eye,
   EyeOff,
-  UserCheck,
+  CheckCircle2,
+  XCircle,
 } from "lucide-react";
 
 export function PublicLandingPage() {
@@ -28,17 +29,26 @@ export function PublicLandingPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleGoogleLogin = () => {
-    const params = new URLSearchParams();
-    if (name.trim()) {
-      params.append("name", name.trim());
-    }
-    window.location.href = `/api/auth/google?${params.toString()}`;
-  };
+  // Password Validation Rules:
+  // 1. Min 6 chars
+  // 2. Min 1 uppercase English letter (A-Z)
+  // 3. Min 1 digit (0-9)
+  // 4. English characters only (no Hebrew)
+  const isMinLength = password.length >= 6;
+  const hasUppercase = /[A-Z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+  const isEnglishOnly = password.length > 0 && !/[^\x00-\x7F]/.test(password);
+  const isPasswordValid = isMinLength && hasUppercase && hasNumber && isEnglishOnly;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    if (mode === "register" && !isPasswordValid) {
+      setError("הסיסמה אינה עומדת בדרישות האבטחה (לפחות 6 תווים, אות גדולה באנגלית, מספר, ללא עברית)");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -99,7 +109,7 @@ export function PublicLandingPage() {
         </div>
       </header>
 
-      {/* Main Grid: Hero Info + Integrated Login/Register Form */}
+      {/* Main Grid: Hero Info + Integrated Email Login/Register Form */}
       <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8 flex-1 flex flex-col justify-center">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
           {/* Right Column: Hero Headline, Purpose & Features */}
@@ -164,66 +174,30 @@ export function PublicLandingPage() {
               </div>
             </div>
 
-            {/* Explicit Purpose Statement Box for Google OAuth Verification */}
+            {/* About TravelPlanner Summary Box */}
             <div className="rounded-xl bg-blue-50/80 border border-blue-200/90 p-4 text-left shadow-sm" dir="ltr">
               <div className="flex items-center gap-2 mb-1.5">
                 <Globe2 size={15} className="text-blue-600" />
                 <h3 className="text-[11px] font-extrabold text-blue-900 uppercase tracking-wider">About TravelPlanner</h3>
               </div>
               <p className="text-xs text-zinc-700 leading-relaxed font-sans">
-                TravelPlanner is a comprehensive web application designed to help users plan, organize, and manage their travel itineraries. The platform enables travelers to organize daily trip schedules, track flight and hotel bookings, securely store travel documents, and receive AI-assisted vacation recommendations. When logging in with Google, TravelPlanner accesses basic profile details (name and email) strictly to authenticate users and manage their personal trips.
+                TravelPlanner is a comprehensive web application designed to help users plan, organize, and manage their travel itineraries. The platform enables travelers to organize daily trip schedules, track flight and hotel bookings, securely store travel documents, and receive AI-assisted vacation recommendations.
               </p>
             </div>
           </div>
 
-          {/* Left Column: Seamless Login & Registration Card */}
+          {/* Left Column: Pure Email Login & Registration Card */}
           <div className="lg:col-span-5">
             <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-xl relative">
               <div className="text-center mb-6">
                 <h2 className="text-xl font-extrabold text-zinc-900">
-                  {mode === "login" ? "ברוכים הבאים ל-TravelPlanner" : "הרשמה ל-TravelPlanner"}
+                  {mode === "login" ? "כניסה לחשבון" : "הרשמה ל-TravelPlanner"}
                 </h2>
                 <p className="text-xs text-zinc-500 mt-1">
                   {mode === "login"
-                    ? "התחבר כדי לגשת למסלולים ולמסמכים שלך"
-                    : "צור חשבון חדש והתחל לתכנן טיולים בחכמה"}
+                    ? "הזן אימייל וסיסמה כדי להתחבר"
+                    : "צור חשבון חדש והתחל לתכנן טיולים"}
                 </p>
-              </div>
-
-              {/* Google OAuth Login Button */}
-              <Button
-                type="button"
-                onClick={handleGoogleLogin}
-                className="w-full py-3 text-sm font-bold bg-white hover:bg-zinc-50 text-zinc-800 border border-zinc-300 rounded-xl shadow-sm transition-all flex items-center justify-center gap-3 mb-5"
-              >
-                <svg className="h-5 w-5" viewBox="0 0 24 24">
-                  <path
-                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                    fill="#4285F4"
-                  />
-                  <path
-                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                    fill="#34A853"
-                  />
-                  <path
-                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                    fill="#FBBC05"
-                  />
-                  <path
-                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                    fill="#EA4335"
-                  />
-                </svg>
-                המשך עם Google
-              </Button>
-
-              <div className="relative my-4 text-center">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-zinc-200" />
-                </div>
-                <span className="relative bg-white px-3 text-[11px] font-medium text-zinc-400">
-                  או באמצעות אימייל
-                </span>
               </div>
 
               {error && (
@@ -232,7 +206,7 @@ export function PublicLandingPage() {
                 </div>
               )}
 
-              <form onSubmit={handleSubmit} className="space-y-3.5">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 {mode === "register" && (
                   <div>
                     <label className="block text-xs font-bold text-zinc-700 mb-1">שם מלא</label>
@@ -240,7 +214,7 @@ export function PublicLandingPage() {
                       <User size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400" />
                       <Input
                         type="text"
-                        placeholder="ישראל ישראלי"
+                        placeholder="גיא אלירז"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         required
@@ -256,7 +230,7 @@ export function PublicLandingPage() {
                     <Mail size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400" />
                     <Input
                       type="email"
-                      placeholder="your@email.com"
+                      placeholder="eliraz.guy@gmail.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
@@ -287,12 +261,37 @@ export function PublicLandingPage() {
                       {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   </div>
+
+                  {/* Dynamic Password Strength Rules Checklist (shown when typing password or in register mode) */}
+                  {mode === "register" && (
+                    <div className="mt-2.5 rounded-lg bg-zinc-50 border border-zinc-200 p-2.5 space-y-1">
+                      <p className="text-[11px] font-bold text-zinc-700 mb-1">דרישות סיסמה:</p>
+                      <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[11px]">
+                        <div className={`flex items-center gap-1.5 ${isMinLength ? "text-emerald-600 font-semibold" : "text-zinc-400"}`}>
+                          {isMinLength ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
+                          <span>לפחות 6 תווים</span>
+                        </div>
+                        <div className={`flex items-center gap-1.5 ${hasUppercase ? "text-emerald-600 font-semibold" : "text-zinc-400"}`}>
+                          {hasUppercase ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
+                          <span>אות גדולה באנגלית (A-Z)</span>
+                        </div>
+                        <div className={`flex items-center gap-1.5 ${hasNumber ? "text-emerald-600 font-semibold" : "text-zinc-400"}`}>
+                          {hasNumber ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
+                          <span>לפחות מספר אחד (0-9)</span>
+                        </div>
+                        <div className={`flex items-center gap-1.5 ${isEnglishOnly ? "text-emerald-600 font-semibold" : "text-zinc-400"}`}>
+                          {isEnglishOnly ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
+                          <span>אותיות באנגלית בלבד</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <Button
                   type="submit"
-                  disabled={loading}
-                  className="w-full py-3 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-md transition-all flex items-center justify-center gap-2 mt-4"
+                  disabled={loading || (mode === "register" && !isPasswordValid)}
+                  className="w-full py-3 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-md transition-all flex items-center justify-center gap-2 mt-4 disabled:opacity-50"
                 >
                   {loading ? (
                     <Loader2 size={16} className="animate-spin" />
