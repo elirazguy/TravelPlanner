@@ -214,7 +214,7 @@ export function PublicLandingPage() {
                       <User size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400" />
                       <Input
                         type="text"
-                        placeholder="גיא אלירז"
+                        placeholder="ישראל ישראלי"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         required
@@ -230,7 +230,7 @@ export function PublicLandingPage() {
                     <Mail size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400" />
                     <Input
                       type="email"
-                      placeholder="eliraz.guy@gmail.com"
+                      placeholder="your@email.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
