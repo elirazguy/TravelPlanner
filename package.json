@@ -5,7 +5,7 @@
   "description": "A professional, comprehensive web application for planning international vacations and trips.",
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && prisma db push && next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
     "db:push": "prisma db push",
