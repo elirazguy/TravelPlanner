@@ -23,3 +23,21 @@ export async function GET(req: NextRequest, { params }: Params) {
 
   return new NextResponse(doc.fileData, { status: 200, headers });
 }
+
+// PATCH — retag a document.
+export async function PATCH(req: NextRequest, { params }: Params) {
+  const { id } = await params;
+  const body = await req.json();
+  const doc = await prisma.document.update({
+    where: { id },
+    data: { tag: body.tag },
+  });
+  return NextResponse.json(doc);
+}
+
+// DELETE — remove document record.
+export async function DELETE(_req: NextRequest, { params }: Params) {
+  const { id } = await params;
+  await prisma.document.delete({ where: { id } }).catch(() => {});
+  return NextResponse.json({ ok: true });
+}

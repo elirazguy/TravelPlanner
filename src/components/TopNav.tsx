@@ -46,7 +46,7 @@ export function TopNav({ initialUser }: { initialUser?: UserProfile | null }) {
           setUser(data);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, [pathname, user]);
 
   // Hide TopNav on login page or when accessed from login
@@ -75,7 +75,7 @@ export function TopNav({ initialUser }: { initialUser?: UserProfile | null }) {
             <img
               src="/Logo.png?v=2"
               alt="TravelPlanner"
-              className="h-10 w-10 md:h-12 md:w-12 object-contain drop-shadow-sm"
+              className="h-10 w-12 md:h-10 md:w-12 object-contain drop-shadow-sm"
             />
             <div className="leading-tight text-right">
               <div className="font-display text-base md:text-lg font-extrabold text-ink-900 flex items-center gap-1">
