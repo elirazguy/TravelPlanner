@@ -61,20 +61,8 @@ export function DocumentsVault({ trip }: { trip: TripDTO }) {
     });
     setUploading(false);
     if (!res.ok) {
-      const rawText = await res.text().catch(() => "");
-      let errorMsg = rawText;
-      if (rawText.startsWith("{")) {
-        try {
-          const j = JSON.parse(rawText);
-          errorMsg = j.error || rawText;
-        } catch {}
-      } else {
-        // If it's an HTML page (like 413 Payload Too Large or 500 error), extract the <title> or show a snippet
-        const match = rawText.match(/<title[^>]*>([^<]+)<\/title>/i);
-        if (match) errorMsg = `HTML Error: ${match[1]}`;
-        else errorMsg = `Raw Error: ${rawText.slice(0, 100)}`;
-      }
-      alert(`שגיאה בהעלאת המסמך (סטטוס ${res.status}): ${errorMsg || res.statusText}`);
+      const data = await res.json().catch(() => ({}));
+      alert(`שגיאה בהעלאת המסמך: ${data.error || res.statusText}`);
     } else {
       if (fileRef.current) fileRef.current.value = "";
       router.refresh();
