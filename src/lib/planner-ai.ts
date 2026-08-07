@@ -175,7 +175,7 @@ export async function runPlannerChat(tripId: string, messages: { role: string; c
   const locationBias = trip.mapCenterLat && trip.mapCenterLng ? { lat: trip.mapCenterLat, lng: trip.mapCenterLng } : undefined;
 
   let currentLoop = 0;
-  const MAX_LOOPS = 8; // prevent infinite loops
+  const MAX_LOOPS = 25; // prevent infinite loops but allow large itineraries
 
   while (currentLoop < MAX_LOOPS) {
     currentLoop++;
@@ -274,6 +274,7 @@ export async function runPlannerChat(tripId: string, messages: { role: string; c
           result = { status: "Updated" };
         }
       } catch (err: any) {
+        console.error(`Error executing tool ${name}:`, err.message);
         result = { success: false, error: err.message };
       }
 
