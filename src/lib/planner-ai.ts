@@ -14,6 +14,8 @@ export async function buildPlannerTripContext(tripId: string) {
         include: { events: true },
       },
       hotels: true,
+      flights: true,
+      transportation: true,
       savedPlaces: true,
     },
   });
@@ -24,6 +26,30 @@ export async function buildPlannerTripContext(tripId: string) {
   lines.push(`DESTINATION: ${trip.destination} (${trip.country})`);
   lines.push(`DATES: ${trip.startDate.toISOString().slice(0,10)} to ${trip.endDate.toISOString().slice(0,10)}`);
   if (trip.notes) lines.push(`TRAVELER NOTES: ${trip.notes}`);
+  lines.push("");
+
+  lines.push("LOGISTICS (Flights, Hotels, Transportation):");
+  if (trip.flights.length > 0) {
+    lines.push("  FLIGHTS:");
+    for (const f of trip.flights) {
+      lines.push(`    - ${f.airline} ${f.flightNumber} | Departs: ${f.flightDate || "N/A"} from ${f.departureAirport} | Arrives: ${f.arrivalAirport}`);
+    }
+  }
+  if (trip.hotels.length > 0) {
+    lines.push("  HOTELS:");
+    for (const h of trip.hotels) {
+      lines.push(`    - ${h.name} | Check-in: ${h.checkIn?.toISOString().slice(0,10) || "N/A"} | Check-out: ${h.checkOut?.toISOString().slice(0,10) || "N/A"} | Address: ${h.address || ""}`);
+    }
+  }
+  if (trip.transportation.length > 0) {
+    lines.push("  TRANSPORTATION:");
+    for (const t of trip.transportation) {
+      lines.push(`    - [${t.type}] ${t.provider || "Unknown"} | Departs: ${t.departureTime?.toISOString() || "N/A"} from ${t.departureLocation} | Arrives: ${t.arrivalLocation}`);
+    }
+  }
+  if (trip.flights.length === 0 && trip.hotels.length === 0 && trip.transportation.length === 0) {
+    lines.push("  (No logistics saved)");
+  }
   lines.push("");
 
   lines.push("ITINERARY (DAYS):");
