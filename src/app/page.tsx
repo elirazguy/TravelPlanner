@@ -10,6 +10,7 @@ import { MapPinned } from "lucide-react";
 import { PublicLandingPage } from "@/components/PublicLandingPage";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function HomePage() {
   let user: any;
@@ -23,14 +24,12 @@ export default async function HomePage() {
       return <PublicLandingPage />;
     }
 
-    // Auto-archive trips whose end date has passed.
-    await prisma.trip.updateMany({
-      where: { userId: user.id, status: { not: "ARCHIVED" }, endDate: { lt: new Date() } },
-      data: { status: "ARCHIVED" },
-    });
-
-    // Fetch the active trips and the list of all trips (for the map) in parallel
-    const [fetchedTrips, fetchedAllTrips] = await Promise.all([
+    // Auto-archive trips whose end date has passed + fetch all data in parallel
+    const [, fetchedTrips, fetchedAllTrips] = await Promise.all([
+      prisma.trip.updateMany({
+        where: { userId: user.id, status: { not: "ARCHIVED" }, endDate: { lt: new Date() } },
+        data: { status: "ARCHIVED" },
+      }),
       prisma.trip.findMany({
         where: {
           status: { not: "ARCHIVED" },

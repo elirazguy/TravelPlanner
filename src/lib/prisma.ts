@@ -1,33 +1,30 @@
 import { PrismaClient } from "@prisma/client";
 
-function getConnectionString(): string | undefined {
+function buildUrl(): string | undefined {
   const urlStr = process.env.DATABASE_URL;
   if (!urlStr) return undefined;
 
   try {
     const url = new URL(urlStr);
 
-    // If using the Supabase transaction pooler (port 6543), pgbouncer=true is REQUIRED
-    // otherwise Prisma will throw 'prepared statement s0 already exists'
+    // Transaction pooler (port 6543) requires pgbouncer=true
     if (url.port === "6543") {
       url.searchParams.set("pgbouncer", "true");
     }
 
-    // Ensure timeouts for reliable Vercel cold starts
-    if (!url.searchParams.has("connect_timeout")) {
-      url.searchParams.set("connect_timeout", "30");
-    }
-    if (!url.searchParams.has("pool_timeout")) {
-      url.searchParams.set("pool_timeout", "30");
-    }
+    // Aggressive timeouts for Vercel serverless cold starts
+    url.searchParams.set("connect_timeout", "10");
+    url.searchParams.set("pool_timeout", "10");
+    // Limit connections — Vercel spawns many lambdas simultaneously
+    url.searchParams.set("connection_limit", "1");
 
     return url.toString();
-  } catch (e) {
+  } catch {
     return urlStr;
   }
 }
 
-const dbUrl = getConnectionString();
+const dbUrl = buildUrl();
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -40,4 +37,9 @@ export const prisma =
     log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
   });
 
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+// In production (Vercel), do NOT cache the client on globalThis —
+// each Lambda invocation should create its own short-lived connection.
+// In development, reuse to avoid "too many connections" during hot reload.
+if (process.env.NODE_ENV !== "production") {
+  globalForPrisma.prisma = prisma;
+}
