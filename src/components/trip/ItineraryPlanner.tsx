@@ -513,13 +513,13 @@ function EventRow({
             {event.description && (
               <p className="mt-1 text-xs text-ink-500">{event.description}</p>
             )}
-            {(event.locationName || (event.lat != null && event.lng != null)) && (
+            {([ "ATTRACTION", "FOOD", "HOTEL", "ACTIVITY" ].includes(event.category) || event.locationName || (event.lat != null && event.lng != null)) && (
               <NavButtons
                 className="mt-1.5"
                 target={{
                   lat: event.lat,
                   lng: event.lng,
-                  name: event.locationName,
+                  name: event.locationName || event.title,
                   address: event.address,
                   placeId: event.placeId,
                 }}
