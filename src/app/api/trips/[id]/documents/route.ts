@@ -30,7 +30,7 @@ async function uploadToSupabaseStorage(
         "Content-Type": mimeType || "application/octet-stream",
         "x-upsert": "true",
       },
-      body: bytes,
+      body: new Uint8Array(bytes),
     }
   );
 
