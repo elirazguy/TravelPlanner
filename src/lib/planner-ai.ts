@@ -38,13 +38,13 @@ export async function buildPlannerTripContext(tripId: string) {
   if (trip.hotels.length > 0) {
     lines.push("  HOTELS:");
     for (const h of trip.hotels) {
-      lines.push(`    - ${h.name} | Check-in: ${h.checkIn?.toISOString().slice(0,10) || "N/A"} | Check-out: ${h.checkOut?.toISOString().slice(0,10) || "N/A"} | Address: ${h.address || ""}`);
+      lines.push(`    - ${h.name} | Check-in: ${h.checkInDate?.toISOString().slice(0,10) || "N/A"} | Check-out: ${h.checkOutDate?.toISOString().slice(0,10) || "N/A"} | Address: ${h.address || ""}`);
     }
   }
   if (trip.transportation.length > 0) {
     lines.push("  TRANSPORTATION:");
     for (const t of trip.transportation) {
-      lines.push(`    - [${t.type}] ${t.provider || "Unknown"} | Departs: ${t.departureTime?.toISOString() || "N/A"} from ${t.departureLocation} | Arrives: ${t.arrivalLocation}`);
+      lines.push(`    - [${t.type}] ${t.company || "Unknown"} | Departs: ${t.departureTime || "N/A"} from ${t.fromLocation || "Unknown"} | Arrives: ${t.toLocation || "Unknown"}`);
     }
   }
   if (trip.flights.length === 0 && trip.hotels.length === 0 && trip.transportation.length === 0) {
