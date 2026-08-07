@@ -42,13 +42,37 @@ export function ItineraryPlanner({ trip }: { trip: TripDTO }) {
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOverDayId, setDragOverDayId] = useState<string | null>(null);
 
+  const [localDays, setLocalDays] = useState(trip.days);
+  useEffect(() => {
+    setLocalDays(trip.days);
+  }, [trip.days]);
+
   const mapBias = {
     lat: trip.mapCenterLat ?? undefined,
     lng: trip.mapCenterLng ?? undefined,
   };
 
   async function moveEventToDay(eventId: string, targetDayId: string) {
-    const targetDay = trip.days.find((d) => d.id === targetDayId);
+    const targetDay = localDays.find((d) => d.id === targetDayId);
+    
+    // Optimistic UI update
+    setLocalDays(prev => {
+      const next = prev.map(d => ({ ...d, events: [...d.events] }));
+      let moved: any = null;
+      for (const d of next) {
+        const idx = d.events.findIndex(e => e.id === eventId);
+        if (idx !== -1) {
+          moved = d.events[idx];
+          d.events.splice(idx, 1);
+        }
+      }
+      if (moved) {
+        const tgt = next.find(d => d.id === targetDayId);
+        if (tgt) tgt.events.push({ ...moved, dayId: targetDayId, orderIndex: 999 });
+      }
+      return next;
+    });
+
     const maxOrder = targetDay
       ? Math.max(0, ...targetDay.events.map((e) => e.orderIndex ?? 0))
       : 0;
@@ -68,6 +92,32 @@ export function ItineraryPlanner({ trip }: { trip: TripDTO }) {
     const bucket = (place.category ?? "OTHER") as SavedPlaceCategory;
     const eventCategory =
       SAVED_PLACE_CATEGORY_META[bucket]?.eventCategory ?? "OTHER";
+
+    // Optimistic UI update
+    setLocalDays(prev => prev.map(d => {
+      if (d.id === targetDayId) {
+        return {
+          ...d,
+          events: [...d.events, {
+            id: `temp-${Date.now()}`,
+            dayId: targetDayId,
+            title: place.name,
+            category: eventCategory,
+            locationName: place.name,
+            address: place.address,
+            lat: place.lat,
+            lng: place.lng,
+            placeId: place.placeId,
+            orderIndex: 999,
+            description: null,
+            startTime: null,
+            endTime: null,
+          } as EventDTO]
+        };
+      }
+      return d;
+    }));
+
     await fetch(`/api/trips/${trip.id}/events`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -96,6 +146,31 @@ export function ItineraryPlanner({ trip }: { trip: TripDTO }) {
     dayId: string,
     dayEvents: EventDTO[]
   ) {
+    // Optimistic update
+    setLocalDays(prev => {
+      const next = prev.map(d => ({ ...d, events: [...d.events] }));
+      const targetDay = next.find(d => d.id === dayId);
+      if (targetDay) {
+        let draggedEvent: any = null;
+        for (const d of next) {
+          const idx = d.events.findIndex(e => e.id === draggedId);
+          if (idx !== -1) {
+            draggedEvent = d.events[idx];
+            d.events.splice(idx, 1);
+          }
+        }
+        if (draggedEvent) {
+          const tgtIdx = targetDay.events.findIndex(e => e.id === targetId);
+          if (tgtIdx !== -1) {
+             targetDay.events.splice(tgtIdx, 0, { ...draggedEvent, dayId });
+          } else {
+             targetDay.events.push({ ...draggedEvent, dayId });
+          }
+        }
+      }
+      return next;
+    });
+
     const dragged = dayEvents.find((e) => e.id === draggedId);
     const target = dayEvents.find((e) => e.id === targetId);
     if (!target) return;
@@ -135,8 +210,37 @@ export function ItineraryPlanner({ trip }: { trip: TripDTO }) {
           בנה ציר זמן יומי. האירועים ממוינים כרונולוגית לפי שעה, וכל מיקום שתצרף מסונכרן למפה ומקבל קידוד צבע לפי יום.
         </p>
 
-      {trip.days.map((day) => {
-        const events = sortEventsChronologically(day.events);
+      {localDays.map((day) => {
+        // Inject flights for this day
+        const dayDateObj = new Date(day.date);
+        const dayStr = dayDateObj.toISOString().split("T")[0];
+        
+        const dayFlights = trip.flights?.filter(f => {
+           if (!f.flightDate) return false;
+           return new Date(f.flightDate).toISOString().split("T")[0] === dayStr;
+        }) || [];
+
+        const syntheticFlightEvents = dayFlights.map(f => {
+           const timeStr = f.flightDate.includes("T") ? f.flightDate.split("T")[1].substring(0, 5) : null;
+           return {
+              id: `flight-${f.id}`,
+              dayId: day.id,
+              title: `טיסה: ${f.airline || ""} ${f.flightNumber}`,
+              category: "OTHER",
+              description: `המראה: ${f.departureAirport || "לא ידוע"} ➔ נחיתה: ${f.arrivalAirport || "לא ידוע"}`,
+              startTime: timeStr,
+              endTime: null,
+              orderIndex: -1,
+              locationName: null,
+              address: null,
+              lat: null,
+              lng: null,
+              placeId: null,
+              isReadOnly: true,
+           } as EventDTO & { isReadOnly?: boolean };
+        });
+
+        const events = sortEventsChronologically([...day.events, ...syntheticFlightEvents]);
         const isDragOver = dragOverDayId === day.id;
 
         return (
@@ -308,7 +412,7 @@ function EventRow({
   onDragEnd,
   onDropOnEvent,
 }: {
-  event: EventDTO;
+  event: EventDTO & { isReadOnly?: boolean };
   dayEvents: EventDTO[];
   mapBias: { lat?: number; lng?: number };
   draggingId: string | null;
@@ -334,8 +438,9 @@ function EventRow({
 
   return (
     <li
-      draggable={!editing}
+      draggable={!editing && !event.isReadOnly}
       onDragStart={(e) => {
+        if (event.isReadOnly) return;
         e.dataTransfer.setData("text/plain", event.id);
         e.dataTransfer.effectAllowed = "move";
         onDragStart(event.id);
@@ -377,10 +482,11 @@ function EventRow({
         />
       ) : (
         <div className="flex items-start gap-2 px-3 py-2.5">
-          {/* Drag handle */}
-          <div className="mt-1 cursor-grab text-ink-200 opacity-0 transition group-hover:opacity-100 active:cursor-grabbing">
-            <GripVertical size={14} />
-          </div>
+          {!event.isReadOnly && (
+            <div className="mt-1 cursor-grab text-ink-200 opacity-0 transition group-hover:opacity-100 active:cursor-grabbing">
+              <GripVertical size={14} />
+            </div>
+          )}
 
           {/* Time */}
           <div className="mt-0.5 flex w-12 shrink-0 flex-col items-center">
@@ -422,25 +528,27 @@ function EventRow({
           </div>
 
           {/* Actions */}
-          <div className="flex shrink-0 items-center gap-1 opacity-0 transition group-hover:opacity-100">
-            <button
-              onClick={() => setEditing(true)}
-              className="rounded p-1 text-ink-300 hover:bg-brand-50 hover:text-brand-500"
-            >
-              <Pencil size={13} />
-            </button>
-            <button
-              onClick={remove}
-              disabled={deleting}
-              className="rounded p-1 text-ink-300 hover:bg-rose-50 hover:text-rose-500 disabled:opacity-50"
-            >
-              {deleting ? (
-                <Loader2 size={13} className="animate-spin" />
-              ) : (
-                <Trash2 size={13} />
-              )}
-            </button>
-          </div>
+          {!event.isReadOnly && (
+            <div className="flex shrink-0 items-center gap-1 opacity-0 transition group-hover:opacity-100">
+              <button
+                onClick={() => setEditing(true)}
+                className="rounded p-1 text-ink-300 hover:bg-brand-50 hover:text-brand-500"
+              >
+                <Pencil size={13} />
+              </button>
+              <button
+                onClick={remove}
+                disabled={deleting}
+                className="rounded p-1 text-ink-300 hover:bg-rose-50 hover:text-rose-500 disabled:opacity-50"
+              >
+                {deleting ? (
+                  <Loader2 size={13} className="animate-spin" />
+                ) : (
+                  <Trash2 size={13} />
+                )}
+              </button>
+            </div>
+          )}
         </div>
       )}
     </li>

@@ -357,6 +357,7 @@ function GoogleMapView({
         body: JSON.stringify({
           dayId: targetDay.id,
           title: point.name,
+          locationName: point.name,
           address: point.address || null,
           lat: point.lat,
           lng: point.lng,

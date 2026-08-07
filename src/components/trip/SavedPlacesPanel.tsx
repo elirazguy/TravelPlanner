@@ -12,6 +12,7 @@ import {
   ListFilter,
   X,
   Sparkles,
+  Search,
 } from "lucide-react";
 import { Button } from "@/components/ui";
 import { cn } from "@/lib/utils";
@@ -45,6 +46,7 @@ export function SavedPlacesPanel({ trip }: { trip: TripDTO }) {
   const [activeCat, setActiveCat] = useState<SavedPlaceCategory | "ALL">("ALL");
   const [hideInPlan, setHideInPlan] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const places = trip.savedPlaces;
   const listNames = useMemo(() => {
@@ -129,18 +131,48 @@ export function SavedPlacesPanel({ trip }: { trip: TripDTO }) {
     router.refresh();
   }
 
+const HEBREW_TO_ENGLISH: Record<string, string> = {
+  "/": "q", "'": "w", "ק": "e", "ר": "r", "א": "t", "ט": "y", "ו": "u", "ן": "i", "ם": "o", "פ": "p",
+  "ש": "a", "ד": "s", "ג": "d", "כ": "f", "ע": "g", "י": "h", "ח": "j", "ל": "k", "ך": "l", "ף": ";", ",": "'",
+  "ז": "z", "ס": "x", "ב": "c", "ה": "v", "נ": "b", "מ": "n", "צ": "m", "ת": ",", "ץ": "."
+};
+
+function qwertyHebrewToEnglish(str: string) {
+  return str.split("").map(c => HEBREW_TO_ENGLISH[c] || c).join("");
+}
+
   // Apply filters
   const filtered = places.filter((p) => {
     if (activeList !== ALL && (p.listName ?? "") !== activeList) return false;
     if (activeCat !== "ALL" && (p.category ?? "OTHER") !== activeCat) return false;
     if (hideInPlan && isInPlan(p)) return false;
+    
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      const mappedQ = qwertyHebrewToEnglish(q);
+      const name = (p.name || "").toLowerCase();
+      const address = (p.address || "").toLowerCase();
+      if (!name.includes(q) && !address.includes(q) && !name.includes(mappedQ) && !address.includes(mappedQ)) {
+        return false;
+      }
+    }
     return true;
   });
 
   // Per-category counts (within the active list scope) for the chips.
-  const catScope = places.filter(
-    (p) => activeList === ALL || (p.listName ?? "") === activeList
-  );
+  const catScope = places.filter((p) => {
+    if (activeList !== ALL && (p.listName ?? "") !== activeList) return false;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      const mappedQ = qwertyHebrewToEnglish(q);
+      const name = (p.name || "").toLowerCase();
+      const address = (p.address || "").toLowerCase();
+      if (!name.includes(q) && !address.includes(q) && !name.includes(mappedQ) && !address.includes(mappedQ)) {
+        return false;
+      }
+    }
+    return true;
+  });
   const catCounts: Record<string, number> = {};
   for (const p of catScope) {
     const c = (p.category ?? "OTHER") as string;
@@ -177,6 +209,19 @@ export function SavedPlacesPanel({ trip }: { trip: TripDTO }) {
           accept=".csv,.json,.geojson"
           onChange={onFile}
           className="hidden"
+        />
+      </div>
+
+      <div className="mb-4 relative">
+        <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none text-ink-400">
+          <Search size={14} />
+        </div>
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="חיפוש מקומות..."
+          className="w-full bg-white border border-ink-200 rounded-lg py-1.5 ps-9 pe-3 text-xs focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all placeholder:text-ink-400"
         />
       </div>
 
