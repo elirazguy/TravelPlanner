@@ -61,6 +61,10 @@ export async function POST(req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: (err as Error).message }, { status: 502 });
   }
 
+  if (!result) {
+    return NextResponse.json({ error: "RESOURCE_EXHAUSTED: Gemini API unavailable or quota exceeded." }, { status: 502 });
+  }
+
   // Enrich each extracted place via Google Places (best-effort) so it gets a
   // real address/coords/placeId and can show on the map.
   const bias =
