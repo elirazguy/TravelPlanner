@@ -11,7 +11,7 @@ export function Card({
   return (
     <div
       className={cn(
-        "rounded-2xl border border-white/60 bg-white/85 shadow-card backdrop-blur-md",
+        "rounded-2xl border border-white/60 bg-white/85 shadow-card backdrop-blur-md max-w-full min-w-0 overflow-hidden",
         className
       )}
     >

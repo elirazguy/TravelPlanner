@@ -250,9 +250,9 @@ export default async function TripPage({
           </div>
         </div>
 
-        <div className="flex flex-col items-start sm:items-end gap-2 pt-1 sm:pt-0">
-          {/* Row 1: The 3 action buttons on one row */}
-          <div className="flex items-center gap-2 overflow-x-auto max-w-full pb-0.5 scrollbar-none">
+        <div className="flex flex-col items-start sm:items-end gap-2 pt-1 sm:pt-0 max-w-full overflow-hidden">
+          {/* Row 1: Action buttons */}
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 max-w-full">
             {(isOwner || isCollaborator) && (
               <ShareInviteModal inviteCode={inviteCode} />
             )}
@@ -277,7 +277,7 @@ export default async function TripPage({
                 👥 שותף בטיול
               </span>
             ) : (
-              <div className="flex items-center gap-2 whitespace-nowrap">
+              <div className="flex flex-wrap items-center gap-2">
                 <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-700">
                   🌐 טיול מומלץ מהקהילה
                 </span>
@@ -292,7 +292,7 @@ export default async function TripPage({
           </div>
 
           {/* Row 2: Collaborator avatars + PDF Export button */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 max-w-full">
             {participants.length > 0 && <CollaboratorsList users={participants} />}
             <a
               href={`/trips/${dto.id}/print`}
