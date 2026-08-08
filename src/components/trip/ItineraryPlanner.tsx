@@ -207,9 +207,9 @@ export function ItineraryPlanner({
   }
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
-      <div className="space-y-5">
-        <p className="text-sm text-ink-500">
+    <div className="grid gap-5 lg:grid-cols-[1fr_320px] min-w-0 max-w-full">
+      <div className="space-y-5 min-w-0 max-w-full">
+        <p className="text-xs sm:text-sm text-ink-500">
           בנה ציר זמן יומי. האירועים ממוינים כרונולוגית לפי שעה, וכל מיקום שתצרף מסונכרן למפה ומקבל קידוד צבע לפי יום.
         </p>
 
@@ -276,21 +276,21 @@ export function ItineraryPlanner({
           >
             <Card
               className={cn(
-                "overflow-hidden transition-all duration-150",
+                "overflow-hidden transition-all duration-150 min-w-0 max-w-full",
                 isDragOver && "ring-2 ring-brand-400 ring-offset-2"
               )}
             >
-              <div className="flex items-center justify-between border-b border-ink-100 bg-ink-50/60 px-4 py-3">
-                <div className="flex items-center gap-3">
+              <div className="flex items-center justify-between border-b border-ink-100 bg-ink-50/60 px-3 sm:px-4 py-3 min-w-0">
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                   <span
-                    className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white"
+                    className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
                     style={{ backgroundColor: day.colorHex }}
                   >
                     {day.dayNumber}
                   </span>
-                  <div>
-                    <div className="text-sm font-bold text-ink-900">יום {day.dayNumber}</div>
-                    <div className="text-xs text-ink-500">
+                  <div className="min-w-0">
+                    <div className="text-xs sm:text-sm font-bold text-ink-900 truncate">יום {day.dayNumber}</div>
+                    <div className="text-[11px] sm:text-xs text-ink-500 truncate">
                       {formatDate(day.date, { weekday: "long" })}
                     </div>
                   </div>
@@ -301,12 +301,13 @@ export function ItineraryPlanner({
                   onClick={() =>
                     setAddingFor(addingFor === day.id ? null : day.id)
                   }
+                  className="shrink-0 text-xs px-2 sm:px-3"
                 >
                   <Plus size={14} /> הוסף אירוע
                 </Button>
               </div>
 
-              <div className="px-4 py-3 flex flex-col gap-3">
+              <div className="px-2 sm:px-4 py-3 flex flex-col gap-2.5 sm:gap-3 min-w-0">
                 {(() => {
                   const dayDateObj = new Date(day.date);
                   const dayStr = dayDateObj.toISOString().split("T")[0];
@@ -492,18 +493,18 @@ function EventRow({
           onCancel={() => setEditing(false)}
         />
       ) : (
-        <div className="flex items-start gap-2 px-3 py-2.5">
+        <div className="flex items-start gap-1.5 sm:gap-2 px-2 sm:px-3 py-2.5 min-w-0 overflow-hidden">
           {!event.isReadOnly && (
-            <div className="mt-1 cursor-grab text-ink-200 opacity-0 transition group-hover:opacity-100 active:cursor-grabbing">
+            <div className="mt-1 hidden sm:block cursor-grab text-ink-200 opacity-0 transition group-hover:opacity-100 active:cursor-grabbing">
               <GripVertical size={14} />
             </div>
           )}
 
           {/* Time */}
-          <div className="mt-0.5 flex w-12 shrink-0 flex-col items-center">
+          <div className="mt-0.5 flex w-10 sm:w-12 shrink-0 flex-col items-center">
             {event.startTime ? (
-              <span className="flex items-center gap-0.5 text-xs font-semibold text-ink-700">
-                <Clock size={11} /> {event.startTime}
+              <span className="flex items-center gap-0.5 text-[11px] sm:text-xs font-semibold text-ink-700">
+                <Clock size={10} /> {event.startTime}
               </span>
             ) : (
               <span className="text-xs text-ink-300">—</span>
@@ -511,18 +512,18 @@ function EventRow({
           </div>
 
           {/* Emoji */}
-          <span className="text-lg leading-none">{meta.emoji}</span>
+          <span className="text-base sm:text-lg leading-none shrink-0">{meta.emoji}</span>
 
           {/* Content */}
-          <div className="min-w-0 flex-1">
-            <div className="text-sm font-semibold text-ink-900">{event.title}</div>
+          <div className="min-w-0 flex-1 overflow-hidden">
+            <div className="text-xs sm:text-sm font-semibold text-ink-900 leading-snug break-words">{event.title}</div>
             {event.locationName && (
-              <div className="mt-0.5 flex items-center gap-1 text-xs text-ink-500">
-                <MapPin size={11} /> {event.locationName}
+              <div className="mt-0.5 flex items-center gap-1 text-[11px] sm:text-xs text-ink-500 truncate">
+                <MapPin size={10} className="shrink-0" /> <span className="truncate">{event.locationName}</span>
               </div>
             )}
             {event.description && (
-              <p className="mt-1 text-xs text-ink-500">{event.description}</p>
+              <p className="mt-1 text-[11px] sm:text-xs text-ink-500 leading-normal break-words">{event.description}</p>
             )}
             {([ "ATTRACTION", "FOOD", "HOTEL", "ACTIVITY" ].includes(event.category) || event.locationName || (event.lat != null && event.lng != null)) && (
               <NavButtons
@@ -540,7 +541,7 @@ function EventRow({
 
           {/* Actions */}
           {!event.isReadOnly && (
-            <div className="flex shrink-0 items-center gap-1 opacity-0 transition group-hover:opacity-100">
+            <div className="flex shrink-0 items-center gap-0.5 sm:gap-1 opacity-100 sm:opacity-0 transition group-hover:opacity-100">
               <button
                 onClick={() => setEditing(true)}
                 className="rounded p-1 text-ink-300 hover:bg-brand-50 hover:text-brand-500"

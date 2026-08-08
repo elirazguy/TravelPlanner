@@ -56,8 +56,8 @@ export function TripWorkspace({ trip }: { trip: TripDTO }) {
   const tripWithLocalDays: TripDTO = { ...trip, days: localDays };
 
   return (
-    <div>
-      <div className="mb-5 flex items-center justify-between gap-1 rounded-xl border border-white/50 bg-white/60 p-1 overflow-x-auto thin-scroll backdrop-blur-xl shadow-glass">
+    <div className="min-w-0 max-w-full overflow-hidden">
+      <div className="mb-5 flex items-center justify-between gap-1 rounded-xl border border-white/50 bg-white/60 p-1 overflow-x-auto thin-scroll backdrop-blur-xl shadow-glass max-w-full">
         <div className="flex items-center gap-1 w-full justify-between sm:justify-start">
           {TABS.map((t) => {
             const Icon = t.icon;

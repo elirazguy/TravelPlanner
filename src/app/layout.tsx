@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import { Rubik, Heebo } from "next/font/google";
 import { BackgroundProvider } from "@/components/background/BackgroundProvider";
@@ -27,6 +27,13 @@ export const metadata: Metadata = {
     "TravelPlanner is an all-in-one travel planning platform designed to organize trip itineraries, manage flight schedules and hotel bookings, securely store travel documents, and offer AI vacation recommendations.",
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
+
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
@@ -34,10 +41,10 @@ export default async function RootLayout({
 
   return (
     <html lang="he" dir="rtl" className={`${rubik.variable} ${heebo.variable}`}>
-      <body className="min-h-screen font-sans">
+      <body className="min-h-screen font-sans overflow-x-hidden">
         <BackgroundProvider>
           <TopNav initialUser={user} />
-          <main className="mx-auto max-w-7xl px-4 py-8 relative">
+          <main className="mx-auto max-w-7xl px-2 sm:px-4 py-4 sm:py-8 relative min-w-0 max-w-full overflow-hidden">
             <PageTransition>{children}</PageTransition>
           </main>
         </BackgroundProvider>

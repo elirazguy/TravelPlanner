@@ -12,7 +12,7 @@ export function NavButtons({
 }) {
   if (!hasNavTarget(target)) return null;
   return (
-    <div className={`flex items-center gap-1.5 ${className}`}>
+    <div className={`flex flex-wrap items-center gap-1.5 ${className}`}>
       <a
         href={googleMapsNavUrl(target)}
         target="_blank"
