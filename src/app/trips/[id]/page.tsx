@@ -68,14 +68,17 @@ export default async function TripPage({
 
   if (!canAccess) notFound();
 
-  // Ensure trip has an inviteCode
+  // Ensure trip has an inviteCode (non-blocking — run in background)
   let inviteCode = trip.inviteCode;
   if (!inviteCode) {
-    const updated = await prisma.trip.update({
+    // Run this in parallel with other operations
+    const updateInvite = prisma.trip.update({
       where: { id: trip.id },
       data: { inviteCode: trip.id },
-    });
-    inviteCode = updated.inviteCode || trip.id;
+      select: { inviteCode: true },
+    }).then((u) => { inviteCode = u.inviteCode || trip.id; }).catch(() => {});
+    inviteCode = trip.id; // use id immediately, update persists async
+    void updateInvite;
   }
 
   // Participants list for avatar display
@@ -101,39 +104,18 @@ export default async function TripPage({
     }
   }
 
-  // Retroactively sync all events with savedPlaces (linking coordinates & marking saved places as assigned)
-  await syncTripSavedPlacesAndEvents(trip.id);
+  // Only sync (expensive: Google Places API calls) when events are missing coordinates.
+  // After first sync, coordinates are stored in DB and subsequent page loads are fast.
+  const allEvents = trip.days.flatMap((d) => d.events);
+  const needsSync = allEvents.some((e) => e.lat == null || e.lng == null);
 
-  // Refetch trip so dto contains updated event coordinates and savedPlaces assignedDayId values
-  const updatedTrip = (await prisma.trip.findUnique({
-    where: { id },
-    include: {
-      days: {
-        orderBy: { dayNumber: "asc" },
-        include: {
-          events: { orderBy: { orderIndex: "asc" } },
-          savedPlaces: true,
-        },
-      },
-      documents: {
-        orderBy: { uploadedAt: "desc" },
-        select: {
-          id: true,
-          fileName: true,
-          originalName: true,
-          fileUrl: true,
-          fileType: true,
-          sizeBytes: true,
-          tag: true,
-          uploadedAt: true,
-        },
-      },
-      hotels: { orderBy: { checkInDate: "asc" } },
-      flights: { orderBy: { flightDate: "asc" } },
-      transportation: { orderBy: { date: "asc" } },
-      savedPlaces: true,
-    },
-  })) || trip;
+  if (needsSync) {
+    // Run sync in background — don't block page render
+    void syncTripSavedPlacesAndEvents(trip.id);
+  }
+
+  // Use the already-fetched trip data directly (no second DB round-trip)
+  const updatedTrip = trip;
 
   // Serialize dates to ISO strings for the client components.
   const dto: TripDTO = {

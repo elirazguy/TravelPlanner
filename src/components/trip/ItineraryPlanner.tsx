@@ -207,8 +207,8 @@ export function ItineraryPlanner({
   }
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[1fr_320px] min-w-0 max-w-full">
-      <div className="space-y-5 min-w-0 max-w-full">
+    <div className="grid gap-5 lg:grid-cols-[1fr_320px] min-w-0 w-full overflow-x-hidden">
+      <div className="space-y-5 min-w-0 w-full overflow-hidden">
         <p className="text-xs sm:text-sm text-ink-500">
           בנה ציר זמן יומי. האירועים ממוינים כרונולוגית לפי שעה, וכל מיקום שתצרף מסונכרן למפה ומקבל קידוד צבע לפי יום.
         </p>

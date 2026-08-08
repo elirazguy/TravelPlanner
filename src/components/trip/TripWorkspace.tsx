@@ -92,7 +92,7 @@ export function TripWorkspace({ trip }: { trip: TripDTO }) {
       </div>
 
       {tab === "itinerary" && (
-        <div className="space-y-8">
+        <div className="space-y-8 min-w-0 overflow-hidden">
           <ItineraryPlanner
             trip={trip}
             localDays={localDays}
