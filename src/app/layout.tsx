@@ -55,7 +55,7 @@ export default async function RootLayout({
       <body className="min-h-screen font-sans overflow-x-hidden">
         <BackgroundProvider>
           <TopNav initialUser={user} />
-          <main className="mx-auto max-w-7xl px-2 sm:px-4 py-4 sm:py-8 relative min-w-0 max-w-full overflow-hidden">
+          <main className="mx-auto max-w-[1400px] w-full px-3 sm:px-6 md:px-8 py-4 sm:py-8 relative min-w-0 overflow-x-hidden">
             <PageTransition>{children}</PageTransition>
           </main>
         </BackgroundProvider>

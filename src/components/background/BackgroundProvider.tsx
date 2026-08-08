@@ -152,10 +152,9 @@ export function BackgroundProvider({
               />
             ))}
             {/* Generated scene image, layered on top when available.
-                If the file isn't present yet it simply renders nothing and the
-                gradient mesh above remains visible. */}
+                Positioned to start exactly below the top nav bar (57px mobile, 65px desktop) */}
             <div
-              className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+              className="absolute top-[57px] md:top-[65px] inset-x-0 bottom-0 bg-cover bg-top bg-no-repeat"
               style={{ backgroundImage: `url(${scene.image})` }}
             />
           </motion.div>
