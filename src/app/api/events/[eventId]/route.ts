@@ -31,6 +31,19 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 // DELETE /api/events/[eventId]
 export async function DELETE(_req: NextRequest, { params }: Params) {
   const { eventId } = await params;
-  await prisma.event.delete({ where: { id: eventId } });
+  const event = await prisma.event.findUnique({ where: { id: eventId } });
+  if (event) {
+    if (event.placeId) {
+      await prisma.savedPlace.updateMany({
+        where: { placeId: event.placeId, assignedDayId: event.dayId },
+        data: { assignedDayId: null },
+      });
+    }
+    await prisma.savedPlace.updateMany({
+      where: { name: event.title, assignedDayId: event.dayId },
+      data: { assignedDayId: null },
+    });
+    await prisma.event.delete({ where: { id: eventId } });
+  }
   return NextResponse.json({ ok: true });
 }

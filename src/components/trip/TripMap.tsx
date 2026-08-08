@@ -55,9 +55,10 @@ export function TripMap({ trip }: { trip: TripDTO }) {
   // Calculate points on the map: scheduled events, scheduled places, and unscheduled saved places
   const { points, scheduledCount, unscheduledCount } = useMemo(() => {
     const pts: MapPoint[] = [];
+    // 1. Add scheduled day events from itinerary
     const scheduledPlaceIds = new Set<string>();
+    const scheduledNames = new Set<string>();
 
-    // 1. Add scheduled day events
     for (const day of trip.days) {
       for (const e of sortEventsChronologically(day.events)) {
         if (e.lat != null && e.lng != null) {
@@ -73,33 +74,21 @@ export function TripMap({ trip }: { trip: TripDTO }) {
             kind: "event",
             isScheduled: true,
           });
-          if (e.placeId) scheduledPlaceIds.add(e.placeId);
         }
-      }
-      for (const p of day.savedPlaces) {
-        if (p.lat != null && p.lng != null) {
-          pts.push({
-            id: p.id,
-            name: p.name,
-            lat: p.lat,
-            lng: p.lng,
-            dayNumber: day.dayNumber,
-            color: day.colorHex,
-            category: p.category,
-            address: p.address,
-            kind: "place",
-            isScheduled: true,
-            rawSavedPlaceId: p.id,
-          });
-          scheduledPlaceIds.add(p.id);
-        }
+        if (e.placeId) scheduledPlaceIds.add(e.placeId);
+        if (e.title) scheduledNames.add(e.title.trim().toLowerCase());
+        if (e.locationName) scheduledNames.add(e.locationName.trim().toLowerCase());
       }
     }
 
-    // 2. Add unscheduled saved places (places not yet assigned to any day)
+    // 2. Add unscheduled saved places (places not present in any day's events)
     let unschedCount = 0;
     for (const p of trip.savedPlaces) {
-      if (p.lat != null && p.lng != null && !p.assignedDayId && !scheduledPlaceIds.has(p.id)) {
+      const isScheduledInEvents =
+        (p.placeId && scheduledPlaceIds.has(p.placeId)) ||
+        (p.name && scheduledNames.has(p.name.trim().toLowerCase()));
+
+      if (p.lat != null && p.lng != null && !isScheduledInEvents) {
         pts.push({
           id: `unsched-${p.id}`,
           name: p.name,
