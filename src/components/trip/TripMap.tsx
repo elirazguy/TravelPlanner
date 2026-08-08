@@ -55,26 +55,54 @@ export function TripMap({ trip }: { trip: TripDTO }) {
   // Calculate points on the map: scheduled events, scheduled places, and unscheduled saved places
   const { points, scheduledCount, unscheduledCount } = useMemo(() => {
     const pts: MapPoint[] = [];
-    // 1. Add scheduled day events from itinerary
+
+    // Lookup map for saved places to fallback coordinates for events
+    const savedByPlaceId = new Map<string, typeof trip.savedPlaces[0]>();
+    const savedByName = new Map<string, typeof trip.savedPlaces[0]>();
+    for (const p of trip.savedPlaces) {
+      if (p.placeId) savedByPlaceId.set(p.placeId, p);
+      if (p.name) savedByName.set(p.name.trim().toLowerCase(), p);
+    }
+
     const scheduledPlaceIds = new Set<string>();
     const scheduledNames = new Set<string>();
 
+    // 1. Add scheduled day events from itinerary
     for (const day of trip.days) {
       for (const e of sortEventsChronologically(day.events)) {
-        if (e.lat != null && e.lng != null) {
+        let lat = e.lat;
+        let lng = e.lng;
+        let address = e.address;
+
+        // Fallback: if event has no lat/lng, try to find matching savedPlace
+        if (lat == null || lng == null) {
+          const match =
+            (e.placeId ? savedByPlaceId.get(e.placeId) : null) ||
+            (e.locationName ? savedByName.get(e.locationName.trim().toLowerCase()) : null) ||
+            (e.title ? savedByName.get(e.title.trim().toLowerCase()) : null);
+
+          if (match && match.lat != null && match.lng != null) {
+            lat = match.lat;
+            lng = match.lng;
+            address = address || match.address;
+          }
+        }
+
+        if (lat != null && lng != null) {
           pts.push({
             id: e.id,
             name: e.title,
-            lat: e.lat,
-            lng: e.lng,
+            lat,
+            lng,
             dayNumber: day.dayNumber,
             color: day.colorHex,
             time: e.startTime,
-            address: e.address,
+            address,
             kind: "event",
             isScheduled: true,
           });
         }
+
         if (e.placeId) scheduledPlaceIds.add(e.placeId);
         if (e.title) scheduledNames.add(e.title.trim().toLowerCase());
         if (e.locationName) scheduledNames.add(e.locationName.trim().toLowerCase());

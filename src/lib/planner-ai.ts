@@ -234,6 +234,40 @@ export async function runPlannerChat(tripId: string, messages: { role: string; c
           });
           const nextOrder = (maxOrder._max.orderIndex ?? 0) + 1;
           
+          let lat = args.lat ?? null;
+          let lng = args.lng ?? null;
+          let placeId = args.placeId ?? null;
+          let address = args.address ?? null;
+
+          // Auto-resolve missing coordinates from trip's saved places or Google Places search
+          if ((lat == null || lng == null) && (args.locationName || args.title)) {
+            const query = (args.locationName || args.title).trim();
+            const matchedSaved = trip.savedPlaces.find(
+              p => (args.savedPlaceId && p.id === args.savedPlaceId) ||
+                   (p.placeId && p.placeId === args.placeId) ||
+                   (p.name && p.name.trim().toLowerCase() === query.toLowerCase())
+            );
+
+            if (matchedSaved && matchedSaved.lat != null && matchedSaved.lng != null) {
+              lat = matchedSaved.lat;
+              lng = matchedSaved.lng;
+              placeId = placeId || matchedSaved.placeId;
+              address = address || matchedSaved.address;
+            } else {
+              try {
+                const searchRes = await searchPlaces(query, locationBias);
+                if (searchRes && searchRes.length > 0) {
+                  lat = searchRes[0].lat;
+                  lng = searchRes[0].lng;
+                  placeId = placeId || searchRes[0].placeId;
+                  address = address || searchRes[0].address;
+                }
+              } catch (err) {
+                console.error("Auto geocoding failed for AI add_event:", err);
+              }
+            }
+          }
+
           const event = await prisma.event.create({
             data: {
               dayId: args.dayId,
@@ -241,10 +275,10 @@ export async function runPlannerChat(tripId: string, messages: { role: string; c
               category: args.category,
               startTime: args.startTime || null,
               locationName: args.locationName || null,
-              address: args.address || null,
-              lat: args.lat || null,
-              lng: args.lng || null,
-              placeId: args.placeId || null,
+              address: address || null,
+              lat,
+              lng,
+              placeId: placeId || null,
               description: args.description || null,
               orderIndex: nextOrder,
             }

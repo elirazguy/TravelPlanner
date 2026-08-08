@@ -24,6 +24,31 @@ export async function POST(req: NextRequest, { params }: Params) {
 
   const count = await prisma.event.count({ where: { dayId } });
 
+  let lat = body.lat ?? null;
+  let lng = body.lng ?? null;
+  let placeId = body.placeId ?? null;
+  let address = body.address ?? null;
+
+  if ((lat == null || lng == null) && (body.locationName || body.title)) {
+    const query = body.locationName || body.title;
+    const saved = await prisma.savedPlace.findFirst({
+      where: {
+        tripId,
+        OR: [
+          { name: { equals: query, mode: "insensitive" } },
+          ...(placeId ? [{ placeId }] : []),
+        ],
+      },
+    });
+
+    if (saved && saved.lat != null && saved.lng != null) {
+      lat = saved.lat;
+      lng = saved.lng;
+      placeId = placeId || saved.placeId;
+      address = address || saved.address;
+    }
+  }
+
   const event = await prisma.event.create({
     data: {
       dayId,
@@ -33,10 +58,10 @@ export async function POST(req: NextRequest, { params }: Params) {
       endTime: body.endTime ?? null,
       category: body.category ?? "ACTIVITY",
       locationName: body.locationName ?? null,
-      address: body.address ?? null,
-      lat: body.lat ?? null,
-      lng: body.lng ?? null,
-      placeId: body.placeId ?? null,
+      address: address ?? null,
+      lat,
+      lng,
+      placeId: placeId ?? null,
       orderIndex: count,
     },
   });
