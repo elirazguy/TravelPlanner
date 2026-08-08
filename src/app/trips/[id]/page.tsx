@@ -10,7 +10,7 @@ import { ShareTripButton } from "@/components/ShareTripButton";
 import { CollaboratorsList, type CollaboratorUser } from "@/components/CollaboratorsList";
 import { ShareInviteModal } from "@/components/ShareInviteModal";
 import type { TripDTO } from "@/lib/types";
-import { ensureEventsGeocoded } from "@/lib/places";
+import { syncTripSavedPlacesAndEvents } from "@/lib/places";
 
 export const dynamic = "force-dynamic";
 
@@ -101,27 +101,56 @@ export default async function TripPage({
     }
   }
 
-  // Auto-geocode any events in trip that are missing lat/lng coordinates
-  const allEvents = trip.days.flatMap((d) => d.events);
-  const bias = trip.mapCenterLat && trip.mapCenterLng ? { lat: trip.mapCenterLat, lng: trip.mapCenterLng } : undefined;
-  await ensureEventsGeocoded(allEvents, bias);
+  // Retroactively sync all events with savedPlaces (linking coordinates & marking saved places as assigned)
+  await syncTripSavedPlacesAndEvents(trip.id);
+
+  // Refetch trip so dto contains updated event coordinates and savedPlaces assignedDayId values
+  const updatedTrip = (await prisma.trip.findUnique({
+    where: { id },
+    include: {
+      days: {
+        orderBy: { dayNumber: "asc" },
+        include: {
+          events: { orderBy: { orderIndex: "asc" } },
+          savedPlaces: true,
+        },
+      },
+      documents: {
+        orderBy: { uploadedAt: "desc" },
+        select: {
+          id: true,
+          fileName: true,
+          originalName: true,
+          fileUrl: true,
+          fileType: true,
+          sizeBytes: true,
+          tag: true,
+          uploadedAt: true,
+        },
+      },
+      hotels: { orderBy: { checkInDate: "asc" } },
+      flights: { orderBy: { flightDate: "asc" } },
+      transportation: { orderBy: { date: "asc" } },
+      savedPlaces: true,
+    },
+  })) || trip;
 
   // Serialize dates to ISO strings for the client components.
   const dto: TripDTO = {
-    id: trip.id,
-    title: trip.title,
-    destination: trip.destination,
-    country: trip.country,
-    coverImage: trip.coverImage,
-    startDate: trip.startDate.toISOString(),
-    endDate: trip.endDate.toISOString(),
-    status: trip.status,
-    isPublic: trip.isPublic,
-    cloneCount: trip.cloneCount,
-    notes: trip.notes,
-    mapCenterLat: trip.mapCenterLat,
-    mapCenterLng: trip.mapCenterLng,
-    days: trip.days.map((d) => ({
+    id: updatedTrip.id,
+    title: updatedTrip.title,
+    destination: updatedTrip.destination,
+    country: updatedTrip.country,
+    coverImage: updatedTrip.coverImage,
+    startDate: updatedTrip.startDate.toISOString(),
+    endDate: updatedTrip.endDate.toISOString(),
+    status: updatedTrip.status,
+    isPublic: updatedTrip.isPublic,
+    cloneCount: updatedTrip.cloneCount,
+    notes: updatedTrip.notes,
+    mapCenterLat: updatedTrip.mapCenterLat,
+    mapCenterLng: updatedTrip.mapCenterLng,
+    days: updatedTrip.days.map((d) => ({
       id: d.id,
       date: d.date.toISOString(),
       dayNumber: d.dayNumber,
@@ -144,7 +173,7 @@ export default async function TripPage({
       })),
       savedPlaces: d.savedPlaces.map(serializePlace),
     })),
-    documents: trip.documents.map((d) => ({
+    documents: updatedTrip.documents.map((d) => ({
       id: d.id,
       fileName: d.fileName,
       originalName: d.originalName,
@@ -154,7 +183,7 @@ export default async function TripPage({
       tag: d.tag,
       uploadedAt: d.uploadedAt.toISOString(),
     })),
-    hotels: trip.hotels.map((h) => ({
+    hotels: updatedTrip.hotels.map((h) => ({
       id: h.id,
       name: h.name,
       address: h.address,
@@ -167,7 +196,7 @@ export default async function TripPage({
       lng: h.lng,
       notes: h.notes,
     })),
-    flights: trip.flights.map((f) => ({
+    flights: updatedTrip.flights.map((f) => ({
       id: f.id,
       flightNumber: f.flightNumber,
       airline: f.airline,
@@ -176,7 +205,7 @@ export default async function TripPage({
       flightDate: f.flightDate.toISOString(),
       notes: f.notes,
     })),
-    transportation: trip.transportation.map((t) => ({
+    transportation: updatedTrip.transportation.map((t) => ({
       id: t.id,
       type: t.type,
       date: t.date?.toISOString() ?? null,
@@ -192,7 +221,7 @@ export default async function TripPage({
       contactPhone: t.contactPhone,
       notes: t.notes,
     })),
-    savedPlaces: trip.savedPlaces.map(serializePlace),
+    savedPlaces: updatedTrip.savedPlaces.map(serializePlace),
   };
 
   return (

@@ -76,7 +76,10 @@ export function SavedPlacesPanel({ trip }: { trip: TripDTO }) {
     if (p.assignedDayId) return true;
     if (p.placeId && planned.placeIds.has(p.placeId)) return true;
     const n = normName(p.name);
-    if (n && planned.names.has(n)) return true;
+    if (!n) return false;
+    for (const name of planned.names) {
+      if (name === n || name.includes(n) || n.includes(name)) return true;
+    }
     return false;
   }
 

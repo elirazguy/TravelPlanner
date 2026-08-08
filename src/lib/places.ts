@@ -149,6 +149,140 @@ function mockSearch(query: string): PlaceResult[] {
   ];
 }
 
+function normName(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/["'`׳״.,\-־()]/g, "")
+    .replace(/\s+/g, "")
+    .trim();
+}
+
+export async function syncTripSavedPlacesAndEvents(tripId: string) {
+  const { prisma } = await import("@/lib/prisma");
+
+  const trip = await prisma.trip.findUnique({
+    where: { id: tripId },
+    include: {
+      days: { include: { events: true } },
+      savedPlaces: true,
+    },
+  });
+
+  if (!trip) return;
+
+  const bias =
+    trip.mapCenterLat && trip.mapCenterLng
+      ? { lat: trip.mapCenterLat, lng: trip.mapCenterLng }
+      : undefined;
+
+  const savedPlaces = trip.savedPlaces;
+  const updates: Promise<any>[] = [];
+
+  function isMatch(eventText: string, savedName: string): boolean {
+    const n1 = normName(eventText);
+    const n2 = normName(savedName);
+    if (!n1 || !n2) return false;
+    return n1 === n2 || n1.includes(n2) || n2.includes(n1);
+  }
+
+  for (const day of trip.days) {
+    for (const event of day.events) {
+      // Find matching savedPlace
+      const matchedSaved = savedPlaces.find((p) => {
+        if (event.placeId && p.placeId && event.placeId === p.placeId) return true;
+        if (event.locationName && isMatch(event.locationName, p.name)) return true;
+        if (event.title && isMatch(event.title, p.name)) return true;
+        return false;
+      });
+
+      if (matchedSaved) {
+        // 1. Assign savedPlace to day if not already assigned
+        if (matchedSaved.assignedDayId !== day.id) {
+          matchedSaved.assignedDayId = day.id;
+          updates.push(
+            prisma.savedPlace.update({
+              where: { id: matchedSaved.id },
+              data: { assignedDayId: day.id },
+            }).catch(() => {})
+          );
+        }
+
+        // 2. Fill missing event coordinates from savedPlace
+        if (
+          event.lat == null ||
+          event.lng == null ||
+          !event.placeId ||
+          !event.locationName
+        ) {
+          const newLat = event.lat ?? matchedSaved.lat;
+          const newLng = event.lng ?? matchedSaved.lng;
+          const newPlaceId = event.placeId || matchedSaved.placeId || null;
+          const newAddress = event.address || matchedSaved.address || null;
+          const newLocName = event.locationName || matchedSaved.name;
+
+          if (newLat != null && newLng != null) {
+            event.lat = newLat;
+            event.lng = newLng;
+            event.placeId = newPlaceId;
+            event.address = newAddress;
+            event.locationName = newLocName;
+
+            updates.push(
+              prisma.event.update({
+                where: { id: event.id },
+                data: {
+                  lat: newLat,
+                  lng: newLng,
+                  placeId: newPlaceId,
+                  address: newAddress,
+                  locationName: newLocName,
+                },
+              }).catch(() => {})
+            );
+          }
+        }
+      } else if (event.lat == null || event.lng == null) {
+        // 3. Search Google Places for unmatched event missing coordinates
+        const query = (event.locationName || event.title || "").trim();
+        if (query) {
+          updates.push(
+            (async () => {
+              try {
+                const results = await searchPlaces(query, bias);
+                if (results && results.length > 0) {
+                  const res = results[0];
+                  if (res.lat != null && res.lng != null) {
+                    event.lat = res.lat;
+                    event.lng = res.lng;
+                    event.placeId = event.placeId || res.placeId || null;
+                    event.address = event.address || res.address || null;
+
+                    await prisma.event.update({
+                      where: { id: event.id },
+                      data: {
+                        lat: res.lat,
+                        lng: res.lng,
+                        ...(res.placeId && !event.placeId ? { placeId: res.placeId } : {}),
+                        ...(res.address && !event.address ? { address: res.address } : {}),
+                      },
+                    }).catch(() => {});
+                  }
+                }
+              } catch (e) {
+                console.error(`Failed to geocode event ${event.id}:`, e);
+              }
+            })()
+          );
+        }
+      }
+    }
+  }
+
+  if (updates.length > 0) {
+    await Promise.all(updates);
+  }
+}
+
 export async function ensureEventsGeocoded(
   events: Array<{
     id: string;
