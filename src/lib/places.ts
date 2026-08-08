@@ -148,3 +148,53 @@ function mockSearch(query: string): PlaceResult[] {
     },
   ];
 }
+
+export async function ensureEventsGeocoded(
+  events: Array<{
+    id: string;
+    title: string;
+    locationName?: string | null;
+    address?: string | null;
+    lat?: number | null;
+    lng?: number | null;
+    placeId?: string | null;
+  }>,
+  bias?: { lat: number; lng: number }
+) {
+  const missingEvents = events.filter((e) => e.lat == null || e.lng == null);
+  if (missingEvents.length === 0) return;
+
+  const { prisma } = await import("@/lib/prisma");
+
+  await Promise.all(
+    missingEvents.map(async (e) => {
+      const query = (e.locationName || e.title || "").trim();
+      if (!query) return;
+
+      try {
+        const results = await searchPlaces(query, bias);
+        if (results && results.length > 0) {
+          const match = results[0];
+          if (match.lat != null && match.lng != null) {
+            e.lat = match.lat;
+            e.lng = match.lng;
+            if (!e.placeId) e.placeId = match.placeId || null;
+            if (!e.address) e.address = match.address || null;
+
+            await prisma.event.update({
+              where: { id: e.id },
+              data: {
+                lat: match.lat,
+                lng: match.lng,
+                ...(match.placeId ? { placeId: match.placeId } : {}),
+                ...(match.address && !e.address ? { address: match.address } : {}),
+              },
+            }).catch(() => {});
+          }
+        }
+      } catch (err) {
+        console.error(`Failed to auto-geocode event ${e.id} (${query}):`, err);
+      }
+    })
+  );
+}

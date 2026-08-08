@@ -10,6 +10,7 @@ import { ShareTripButton } from "@/components/ShareTripButton";
 import { CollaboratorsList, type CollaboratorUser } from "@/components/CollaboratorsList";
 import { ShareInviteModal } from "@/components/ShareInviteModal";
 import type { TripDTO } from "@/lib/types";
+import { ensureEventsGeocoded } from "@/lib/places";
 
 export const dynamic = "force-dynamic";
 
@@ -99,6 +100,11 @@ export default async function TripPage({
       });
     }
   }
+
+  // Auto-geocode any events in trip that are missing lat/lng coordinates
+  const allEvents = trip.days.flatMap((d) => d.events);
+  const bias = trip.mapCenterLat && trip.mapCenterLng ? { lat: trip.mapCenterLat, lng: trip.mapCenterLng } : undefined;
+  await ensureEventsGeocoded(allEvents, bias);
 
   // Serialize dates to ISO strings for the client components.
   const dto: TripDTO = {
