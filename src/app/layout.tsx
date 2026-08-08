@@ -25,6 +25,13 @@ export const metadata: Metadata = {
   title: "TravelPlanner — Smart Travel & Itinerary Management",
   description:
     "TravelPlanner is an all-in-one travel planning platform designed to organize trip itineraries, manage flight schedules and hotel bookings, securely store travel documents, and offer AI vacation recommendations.",
+  icons: {
+    icon: [
+      { url: "/Logo.png", type: "image/png" },
+    ],
+    shortcut: "/Logo.png",
+    apple: "/Logo.png",
+  },
 };
 
 export const viewport: Viewport = {
@@ -41,6 +48,10 @@ export default async function RootLayout({
 
   return (
     <html lang="he" dir="rtl" className={`${rubik.variable} ${heebo.variable}`}>
+      <head>
+        <link rel="icon" href="/Logo.png" type="image/png" sizes="any" />
+        <link rel="apple-touch-icon" href="/Logo.png" />
+      </head>
       <body className="min-h-screen font-sans overflow-x-hidden">
         <BackgroundProvider>
           <TopNav initialUser={user} />
