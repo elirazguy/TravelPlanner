@@ -540,7 +540,24 @@ const TRANSPORT_META: Record<string, { label: string; icon: React.ReactNode; bad
 function TransportationSection({ trip }: { trip: TripDTO }) {
   const router = useRouter();
   const [adding, setAdding] = useState(false);
+  const [scanning, setScanning] = useState(false);
+  const [scanMsg, setScanMsg] = useState<string | null>(null);
   const items = trip.transportation ?? [];
+
+  async function scanDocs() {
+    setScanning(true);
+    setScanMsg(null);
+    try {
+      const res = await fetch(`/api/trips/${trip.id}/transportation/scan-docs`, { method: "POST" });
+      const data = await res.json();
+      setScanMsg(data.message ?? "הסריקה הסתיימה");
+      if (data.added > 0) router.refresh();
+    } catch {
+      setScanMsg("אירעה שגיאה בסריקת המסמכים");
+    } finally {
+      setScanning(false);
+    }
+  }
 
   return (
     <div>
@@ -548,10 +565,31 @@ function TransportationSection({ trip }: { trip: TripDTO }) {
         <h2 className="flex items-center gap-2 text-lg font-bold text-ink-900">
           <Car size={18} /> תחבורה
         </h2>
-        <Button size="sm" variant="secondary" onClick={() => setAdding(true)}>
-          <Plus size={14} /> הוסף תחבורה
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={scanDocs}
+            disabled={scanning}
+            className="gap-1.5 text-xs border-amber-200 text-amber-700 hover:bg-amber-50"
+          >
+            {scanning ? <Loader2 size={13} className="animate-spin" /> : <Search size={13} />}
+            סרוק מסמכים
+          </Button>
+          <Button size="sm" variant="secondary" onClick={() => setAdding(true)}>
+            <Plus size={14} /> הוסף תחבורה
+          </Button>
+        </div>
       </div>
+
+      {scanMsg && (
+        <div className={cn(
+          "mb-3 rounded-lg border px-3 py-2 text-xs",
+          scanMsg.includes("נמצאו") ? "border-green-200 bg-green-50 text-green-700" : "border-amber-200 bg-amber-50 text-amber-700"
+        )}>
+          {scanMsg}
+        </div>
+      )}
 
       {items.length === 0 && !adding && (
         <EmptyState

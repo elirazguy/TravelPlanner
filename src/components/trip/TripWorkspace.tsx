@@ -7,10 +7,9 @@ import {
   Map as MapIcon,
   Plane,
   Sparkles,
-  FileDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { TripDTO } from "@/lib/types";
+import type { TripDTO, DayDTO } from "@/lib/types";
 import {
   useSetBackground,
   type BgKey,
@@ -42,9 +41,19 @@ export function TripWorkspace({ trip }: { trip: TripDTO }) {
   const [tab, setTab] = useState<TabId>("itinerary");
   const setBackground = useSetBackground();
 
+  // Lift localDays here so both ItineraryPlanner and TripMap share the same state.
+  // When an event is deleted or moved, ItineraryPlanner updates this, and TripMap
+  // reflects the change immediately without waiting for a server round-trip.
+  const [localDays, setLocalDays] = useState<DayDTO[]>(trip.days);
+  useEffect(() => {
+    setLocalDays(trip.days);
+  }, [trip.days]);
+
   useEffect(() => {
     setBackground(TAB_BACKGROUND[tab]);
   }, [tab, setBackground]);
+
+  const tripWithLocalDays: TripDTO = { ...trip, days: localDays };
 
   return (
     <div>
@@ -84,13 +93,17 @@ export function TripWorkspace({ trip }: { trip: TripDTO }) {
 
       {tab === "itinerary" && (
         <div className="space-y-8">
-          <ItineraryPlanner trip={trip} />
+          <ItineraryPlanner
+            trip={trip}
+            localDays={localDays}
+            setLocalDays={setLocalDays}
+          />
           <div className="pt-4 border-t border-white/40">
             <h2 className="mb-4 flex items-center gap-2 font-display text-xl font-bold text-ink-900">
               <MapIcon className="text-brand-600" size={22} />
               מפת היעדים והמסלול
             </h2>
-            <TripMap trip={trip} />
+            <TripMap trip={tripWithLocalDays} />
           </div>
         </div>
       )}

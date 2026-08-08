@@ -1,25 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Sparkles,
   Compass,
   Backpack,
-  Lightbulb,
   Loader2,
-  Send,
   RefreshCw,
-  CheckCircle2,
 } from "lucide-react";
 import { Button, Card } from "@/components/ui";
 import { Markdown } from "@/components/Markdown";
-import { cn } from "@/lib/utils";
-
-interface ChatMessage {
-  role: "user" | "assistant";
-  content: string;
-  isError?: boolean;
-}
 
 export function Consultation({ tripId }: { tripId: string }) {
   // ── Analyzer State ──────────────────────────────────────────────────────────
@@ -33,18 +23,6 @@ export function Consultation({ tripId }: { tripId: string }) {
   const [packingLoading, setPackingLoading] = useState(false);
   const [packingError, setPackingError] = useState<string | null>(null);
   const [packingNote, setPackingNote] = useState("");
-
-  // ── Chat / Recommendations State ───────────────────────────────────────────
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      role: "assistant",
-      content:
-        "היי! אני יועץ הטיולים האישי שלך. תוכל לשאול אותי כל שאלה לגבי המסלול שלך, המלצות למסעדות באזור, או רעיונות לפעילויות נוספות. 🙂",
-    },
-  ]);
-  const [chatInput, setChatInput] = useState("");
-  const [chatLoading, setChatLoading] = useState(false);
-  const chatScrollRef = useRef<HTMLDivElement>(null);
 
   // ── Fetch saved results on mount ───────────────────────────────────────────
   useEffect(() => {
@@ -152,113 +130,9 @@ export function Consultation({ tripId }: { tripId: string }) {
     }
   }
 
-  // ── Chat logic ─────────────────────────────────────────────────────────────
-  useEffect(() => {
-    chatScrollRef.current?.scrollTo({
-      top: chatScrollRef.current.scrollHeight,
-      behavior: "smooth",
-    });
-  }, [messages, chatLoading]);
-
-  async function sendChat() {
-    if (chatLoading || !chatInput.trim()) return;
-    const userMsg: ChatMessage = { role: "user", content: chatInput.trim() };
-    const history = [...messages, userMsg]
-      .filter((m) => !m.isError)
-      .map((m) => ({ role: m.role, content: m.content }));
-
-    setMessages((prev) => [...prev, userMsg]);
-    setChatInput("");
-    setChatLoading(true);
-
-    try {
-      const res = await fetch(`/api/trips/${tripId}/consult`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ skill: "recommend", messages: history }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setMessages((prev) => [...prev, { role: "assistant", content: data.reply ?? "" }]);
-      } else {
-        setMessages((prev) => [
-          ...prev,
-          { role: "assistant", isError: true, content: `אירעה שגיאה: ${data.error ?? "נסה שוב"}` },
-        ]);
-      }
-    } catch {
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", isError: true, content: "אירעה שגיאה בתקשורת. נסה שוב." },
-      ]);
-    } finally {
-      setChatLoading(false);
-    }
-  }
-
   return (
     <div className="space-y-8 pb-12" dir="rtl">
-      {/* ── SECTION 1: המלצה חכמה (צ׳אט) ─────────────────────────────────── */}
-      <Card className="overflow-hidden border border-white/60 bg-white/90 p-6 shadow-md backdrop-blur-xl space-y-4">
-        <div className="flex items-center gap-3 border-b border-zinc-100 pb-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-600">
-            <Lightbulb size={22} />
-          </div>
-          <div>
-            <h2 className="text-xl font-bold text-zinc-900">המלצה חכמה & צ׳אט AI</h2>
-            <p className="text-xs text-zinc-500">
-              שאל אותי שאלות חופשיות וקבל המלצות למסעדות, נקודות חמד, וטיפים לאורך המסלול.
-            </p>
-          </div>
-        </div>
-
-        {/* Chat window */}
-        <div className="flex h-[380px] flex-col rounded-2xl border border-zinc-100 bg-slate-50/60 overflow-hidden">
-          <div ref={chatScrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
-            {messages.map((m, i) => (
-              <div
-                key={`msg-${i}`}
-                className={cn(
-                  "flex max-w-[80%] flex-col rounded-2xl px-4 py-2.5 text-xs leading-relaxed shadow-sm",
-                  m.role === "user"
-                    ? "mr-auto bg-blue-600 text-white rounded-br-none"
-                    : m.isError
-                    ? "ml-auto bg-red-50 text-red-600 border border-red-100"
-                    : "ml-auto bg-white text-zinc-800 border border-zinc-100 rounded-bl-none"
-                )}
-              >
-                <div className="whitespace-pre-wrap">{m.content}</div>
-              </div>
-            ))}
-            {chatLoading && (
-              <div className="ml-auto flex items-center gap-2 rounded-2xl bg-white px-4 py-2.5 text-xs text-zinc-500 border border-zinc-100 shadow-sm">
-                <Loader2 size={14} className="animate-spin text-amber-500" />
-                <span>מנתח את הנתונים...</span>
-              </div>
-            )}
-          </div>
-
-          <div className="border-t border-zinc-100 bg-white p-3 flex items-center gap-2">
-            <input
-              type="text"
-              value={chatInput}
-              onChange={(e) => setChatInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && sendChat()}
-              placeholder="שאל אותי משהו... (למשל: 'איפה לאכול צהריים ביום הראשון?')"
-              className="flex-1 rounded-xl border border-zinc-200 bg-slate-50 px-3.5 py-2 text-xs text-zinc-800 placeholder:text-zinc-400 focus:border-amber-500 focus:bg-white focus:outline-none"
-            />
-            <Button
-              onClick={sendChat}
-              disabled={chatLoading || !chatInput.trim()}
-              className="bg-amber-500 hover:bg-amber-600 text-white font-bold p-2.5 rounded-xl"
-            >
-              <Send size={15} />
-            </Button>
-          </div>
-        </div>
-      </Card>
-
-      {/* ── SECTION 2: מנתח מסלול ─────────────────────────────────────────── */}
+      {/* ── SECTION 1: מנתח מסלול ─────────────────────────────────────────── */}
       <Card className="overflow-hidden border border-white/60 bg-white/90 p-6 shadow-md backdrop-blur-xl space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-100 pb-4">
           <div className="flex items-center gap-3">
@@ -339,7 +213,7 @@ export function Consultation({ tripId }: { tripId: string }) {
         )}
       </Card>
 
-      {/* ── SECTION 3: עוזר אריזה חכם ──────────────────────────────────────── */}
+      {/* ── SECTION 2: עוזר אריזה חכם ──────────────────────────────────────── */}
       <Card className="overflow-hidden border border-white/60 bg-white/90 p-6 shadow-md backdrop-blur-xl space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-100 pb-4">
           <div className="flex items-center gap-3">

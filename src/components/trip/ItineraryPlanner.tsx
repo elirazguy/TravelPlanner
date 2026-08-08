@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Plus,
@@ -23,7 +23,7 @@ import {
   type SavedPlaceCategory,
 } from "@/lib/constants";
 import { cn, formatDate, sortEventsChronologically } from "@/lib/utils";
-import type { TripDTO, EventDTO } from "@/lib/types";
+import type { TripDTO, EventDTO, DayDTO } from "@/lib/types";
 import type { PlaceResult } from "@/lib/places";
 import { SavedPlacesPanel } from "./SavedPlacesPanel";
 import { PlannerChat } from "./PlannerChat";
@@ -36,16 +36,19 @@ const TIME_OPTIONS = Array.from({ length: 24 * 4 }, (_, i) => {
   return `${h}:${m}`;
 });
 
-export function ItineraryPlanner({ trip }: { trip: TripDTO }) {
+export function ItineraryPlanner({
+  trip,
+  localDays,
+  setLocalDays,
+}: {
+  trip: TripDTO;
+  localDays: DayDTO[];
+  setLocalDays: React.Dispatch<React.SetStateAction<DayDTO[]>>;
+}) {
   const router = useRouter();
   const [addingFor, setAddingFor] = useState<string | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOverDayId, setDragOverDayId] = useState<string | null>(null);
-
-  const [localDays, setLocalDays] = useState(trip.days);
-  useEffect(() => {
-    setLocalDays(trip.days);
-  }, [trip.days]);
 
   const mapBias = {
     lat: trip.mapCenterLat ?? undefined,
@@ -361,6 +364,12 @@ export function ItineraryPlanner({ trip }: { trip: TripDTO }) {
                       mapBias={mapBias}
                       draggingId={draggingId}
                       onChange={() => router.refresh()}
+                      onDeleted={(id) => {
+                        setLocalDays(prev =>
+                          prev.map(d => ({ ...d, events: d.events.filter(e => e.id !== id) }))
+                        );
+                        router.refresh();
+                      }}
                       onDragStart={(id) => setDraggingId(id)}
                       onDragEnd={() => {
                         setDraggingId(null);
@@ -408,6 +417,7 @@ function EventRow({
   mapBias,
   draggingId,
   onChange,
+  onDeleted,
   onDragStart,
   onDragEnd,
   onDropOnEvent,
@@ -417,6 +427,7 @@ function EventRow({
   mapBias: { lat?: number; lng?: number };
   draggingId: string | null;
   onChange: () => void;
+  onDeleted: (id: string) => void;
   onDragStart: (id: string) => void;
   onDragEnd: () => void;
   onDropOnEvent: (draggedId: string, targetId: string) => void;
@@ -433,7 +444,7 @@ function EventRow({
   async function remove() {
     setDeleting(true);
     await fetch(`/api/events/${event.id}`, { method: "DELETE" });
-    onChange();
+    onDeleted(event.id);
   }
 
   return (

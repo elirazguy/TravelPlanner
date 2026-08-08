@@ -95,12 +95,13 @@ export function NewTripModal() {
                 />
               </div>
               <div>
-                <Label>יעד (עיר, מדינה)</Label>
+                <Label>יעד הטיול</Label>
                 <Input
-                  placeholder="טוקיו, יפן"
+                  placeholder="ניו יורק ואזור ניו אינגלנד, ארה&quot;ב"
                   value={form.destination}
                   onChange={(e) => update("destination", e.target.value)}
                 />
+                <p className="mt-1 text-xs text-ink-400">יכול להיות עיר, אזור, מדינה, או מסלול מרובה יעדים</p>
               </div>
               <div>
                 <Label>תאריכי הטיול</Label>
