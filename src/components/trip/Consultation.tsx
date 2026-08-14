@@ -24,41 +24,31 @@ export function Consultation({ tripId }: { tripId: string }) {
   const [packingError, setPackingError] = useState<string | null>(null);
   const [packingNote, setPackingNote] = useState("");
 
-  // ── Fetch saved results on mount ───────────────────────────────────────────
+  // ── Fetch saved results on mount (silent – no spinner) ────────────────────
   useEffect(() => {
     let alive = true;
 
     async function loadSaved() {
-      // 1. Fetch analyzer
+      // 1. Fetch analyzer (silently – no loading state)
       try {
-        setAnalyzerLoading(true);
         const resA = await fetch(`/api/trips/${tripId}/consult?skill=analyzer`);
         if (resA.ok) {
           const dataA = await resA.json();
-          if (alive && dataA.result) {
-            setAnalyzerResult(dataA.result);
-          }
+          if (alive && dataA.result) setAnalyzerResult(dataA.result);
         }
       } catch {
         // ignore
-      } finally {
-        if (alive) setAnalyzerLoading(false);
       }
 
-      // 2. Fetch packing
+      // 2. Fetch packing (silently – no loading state)
       try {
-        setPackingLoading(true);
         const resP = await fetch(`/api/trips/${tripId}/consult?skill=packing`);
         if (resP.ok) {
           const dataP = await resP.json();
-          if (alive && dataP.result) {
-            setPackingResult(dataP.result);
-          }
+          if (alive && dataP.result) setPackingResult(dataP.result);
         }
       } catch {
         // ignore
-      } finally {
-        if (alive) setPackingLoading(false);
       }
     }
 
