@@ -412,7 +412,7 @@ export function PlaceChat({
                 }
               }}
               placeholder="הקלד מקומות, הדבק קישור או צרף תמונה..."
-              className="max-h-24 flex-1 resize-none rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm placeholder:text-ink-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+              className="max-h-24 flex-1 resize-none rounded-xl border border-ink-200 bg-white px-3 py-2 text-base sm:text-sm placeholder:text-ink-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
             />
             <Button onClick={send} disabled={loading || (!input.trim() && !pendingImage)} className="shrink-0">
               <Send size={16} />

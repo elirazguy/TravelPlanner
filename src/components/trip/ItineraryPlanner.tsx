@@ -207,8 +207,8 @@ export function ItineraryPlanner({
   }
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[1fr_320px] min-w-0 w-full overflow-x-hidden">
-      <div className="space-y-5 min-w-0 w-full overflow-hidden">
+    <div className="grid gap-5 lg:grid-cols-[1fr_320px] min-w-0 w-full">
+      <div className="space-y-5 min-w-0 w-full">
         <p className="text-xs sm:text-sm text-ink-500">
           בנה ציר זמן יומי. האירועים ממוינים כרונולוגית לפי שעה, וכל מיקום שתצרף מסונכרן למפה ומקבל קידוד צבע לפי יום.
         </p>
@@ -312,12 +312,16 @@ export function ItineraryPlanner({
                   const dayDateObj = new Date(day.date);
                   const dayStr = dayDateObj.toISOString().split("T")[0];
                   
-                  const hotelForDay = trip.hotels?.find((h) => {
-                    if (!h.checkInDate || !h.checkOutDate) return false;
-                    const checkInStr = new Date(h.checkInDate).toISOString().split("T")[0];
-                    const checkOutStr = new Date(h.checkOutDate).toISOString().split("T")[0];
-                    return dayStr >= checkInStr && dayStr < checkOutStr;
-                  });
+                  const hotelForDay = (trip.hotels ?? [])
+                    .filter((h) => {
+                      if (!h.checkInDate || !h.checkOutDate) return false;
+                      const checkInStr = new Date(h.checkInDate).toISOString().split("T")[0];
+                      const checkOutStr = new Date(h.checkOutDate).toISOString().split("T")[0];
+                      return dayStr >= checkInStr && dayStr < checkOutStr;
+                    })
+                    .sort((a, b) =>
+                      new Date(b.checkInDate!).getTime() - new Date(a.checkInDate!).getTime()
+                    )[0] ?? null;
 
                   const isCheckInDay = hotelForDay?.checkInDate 
                     ? dayStr === new Date(hotelForDay.checkInDate).toISOString().split("T")[0]
@@ -403,7 +407,7 @@ export function ItineraryPlanner({
       </div>
 
       {/* Saved places panel */}
-      <div className="lg:sticky lg:top-4 self-start">
+      <div className="lg:sticky lg:top-4 self-start min-w-0 overflow-x-clip">
         <SavedPlacesPanel trip={trip} />
       </div>
     </div>

@@ -56,7 +56,7 @@ export function TripWorkspace({ trip }: { trip: TripDTO }) {
   const tripWithLocalDays: TripDTO = { ...trip, days: localDays };
 
   return (
-    <div className="min-w-0 max-w-full overflow-hidden">
+    <div className="min-w-0 max-w-full overflow-x-clip">
       <div className="mb-5 flex items-center justify-between gap-1 rounded-xl border border-white/50 bg-white/60 p-1 overflow-x-auto thin-scroll backdrop-blur-xl shadow-glass max-w-full">
         <div className="flex items-center gap-1 w-full justify-between sm:justify-start">
           {TABS.map((t) => {
@@ -92,7 +92,7 @@ export function TripWorkspace({ trip }: { trip: TripDTO }) {
       </div>
 
       {tab === "itinerary" && (
-        <div className="space-y-8 min-w-0 overflow-hidden">
+        <div className="space-y-8 min-w-0">
           <ItineraryPlanner
             trip={trip}
             localDays={localDays}

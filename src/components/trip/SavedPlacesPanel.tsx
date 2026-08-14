@@ -185,7 +185,7 @@ function qwertyHebrewToEnglish(str: string) {
   const inPlanCount = catScope.filter((p) => isInPlan(p)).length;
 
   return (
-    <div className="rounded-2xl border border-white/60 bg-white/85 p-4 shadow-card backdrop-blur-md">
+    <div className="rounded-2xl border border-white/60 bg-white/85 p-4 shadow-card backdrop-blur-md overflow-x-clip">
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <h3 className="me-auto flex items-center gap-1.5 text-sm font-bold text-ink-900">
           <Bookmark size={15} className="text-brand-600" /> מקומות שמורים
@@ -224,7 +224,7 @@ function qwertyHebrewToEnglish(str: string) {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="חיפוש מקומות..."
-          className="w-full bg-white border border-ink-200 rounded-lg py-1.5 ps-9 pe-3 text-xs focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all placeholder:text-ink-400"
+          className="w-full bg-white border border-ink-200 rounded-lg py-1.5 ps-9 pe-3 text-base sm:text-xs focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all placeholder:text-ink-400"
         />
       </div>
 

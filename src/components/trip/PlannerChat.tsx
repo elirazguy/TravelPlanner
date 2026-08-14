@@ -194,7 +194,7 @@ export function PlannerChat({ tripId }: { tripId: string }) {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   disabled={loading}
-                  className="flex-1 bg-ink-50 border-none rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500/20 focus:bg-white transition-all disabled:opacity-50"
+                  className="flex-1 bg-ink-50 border-none rounded-xl px-4 py-2.5 text-base sm:text-sm focus:ring-2 focus:ring-brand-500/20 focus:bg-white transition-all disabled:opacity-50"
                 />
                 <Button
                   type="submit"

@@ -52,10 +52,10 @@ export default async function RootLayout({
         <link rel="icon" href="/Logo.png" type="image/png" sizes="any" />
         <link rel="apple-touch-icon" href="/Logo.png" />
       </head>
-      <body className="min-h-screen font-sans overflow-x-hidden">
+      <body className="min-h-screen font-sans overflow-x-clip">
         <BackgroundProvider>
           <TopNav initialUser={user} />
-          <main className="mx-auto max-w-[1400px] w-full px-3 sm:px-6 md:px-8 py-4 sm:py-8 relative min-w-0 overflow-x-hidden">
+          <main className="mx-auto max-w-[1400px] w-full px-3 sm:px-6 md:px-8 py-4 sm:py-8 relative min-w-0 overflow-x-clip">
             <PageTransition>{children}</PageTransition>
           </main>
         </BackgroundProvider>

@@ -93,9 +93,15 @@ function HotelsSection({ trip }: { trip: TripDTO }) {
       )}
 
       <div className="space-y-3">
-        {trip.hotels.map((h) => (
-          <HotelCard key={h.id} hotel={h} onChange={() => router.refresh()} />
-        ))}
+        {[...trip.hotels]
+          .sort((a, b) => {
+            if (!a.checkInDate) return 1;
+            if (!b.checkInDate) return -1;
+            return new Date(a.checkInDate).getTime() - new Date(b.checkInDate).getTime();
+          })
+          .map((h) => (
+            <HotelCard key={h.id} hotel={h} onChange={() => router.refresh()} />
+          ))}
       </div>
       
     </div>
