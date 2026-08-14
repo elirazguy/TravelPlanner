@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { GoogleMap, useLoadScript, MarkerF, InfoWindowF, PolylineF } from "@react-google-maps/api";
-import { MapPin, Layers, Hotel as HotelIcon, Sparkles, Plus, Loader2, Check, Star, Flag, FlagTriangleRight } from "lucide-react";
+import { MapPin, Layers, Hotel as HotelIcon, Sparkles, Plus, Loader2, Check, Star, Flag, FlagTriangleRight, LocateFixed } from "lucide-react";
 import { Card, EmptyState, Button } from "@/components/ui";
 import { sortEventsChronologically, formatDate } from "@/lib/utils";
 import type { TripDTO, DayDTO } from "@/lib/types";
@@ -299,6 +299,40 @@ function GoogleMapView({
   const [activePoint, setActivePoint] = useState<MapPoint | null>(null);
   const [activeHotel, setActiveHotel] = useState<HotelPoint | null>(null);
   const [assigning, setAssigning] = useState<string | null>(null);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [locationLoading, setLocationLoading] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const mapRef = useRef<google.maps.Map | null>(null);
+
+  const onMapLoad = useCallback((map: google.maps.Map) => {
+    mapRef.current = map;
+  }, []);
+
+  function locateUser() {
+    if (!navigator.geolocation) {
+      setLocationError("הדפדפן שלך לא תומך ב-GPS");
+      return;
+    }
+    setLocationLoading(true);
+    setLocationError(null);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setUserLocation(loc);
+        setLocationLoading(false);
+        if (mapRef.current) {
+          mapRef.current.panTo(loc);
+          mapRef.current.setZoom(14);
+        }
+      },
+      (err) => {
+        setLocationLoading(false);
+        if (err.code === 1) setLocationError("אנא אפשר גישה למיקום בהגדרות");
+        else setLocationError("לא ניתן לקבל מיקום");
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }
 
   const dayLines = useMemo(() => {
     const lines: { dayId: string; color: string; path: { lat: number; lng: number }[], firstPointId: string | null, lastPointId: string | null }[] = [];
@@ -398,6 +432,7 @@ function GoogleMapView({
       center={center}
       zoom={totalMarkers ? 12 : 3}
       options={{ streetViewControl: false, mapTypeControl: false }}
+      onLoad={onMapLoad}
     >
       {/* Polylines for days */}
       {dayLines.filter(l => l.path.length > 1).map((line) => (
@@ -576,6 +611,51 @@ function GoogleMapView({
           </div>
         </InfoWindowF>
       )}
+      {/* User location marker */}
+      {userLocation && (
+        <MarkerF
+          position={userLocation}
+          icon={{
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 10,
+            fillColor: "#2563eb",
+            fillOpacity: 1,
+            strokeColor: "#ffffff",
+            strokeWeight: 3,
+          }}
+          label={{ text: "📍", fontSize: "0px" }}
+          title="המיקום שלך"
+          zIndex={1000}
+        />
+      )}
+
+      {/* Locate me button - bottom left */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: "100px",
+          left: "10px",
+          zIndex: 10,
+        }}
+      >
+        <button
+          onClick={locateUser}
+          disabled={locationLoading}
+          title="מרכז למיקום הנוכחי"
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-lg border border-ink-200 hover:bg-blue-50 hover:border-blue-400 transition-all disabled:opacity-60 active:scale-95"
+        >
+          {locationLoading ? (
+            <Loader2 size={18} className="animate-spin text-blue-600" />
+          ) : (
+            <LocateFixed size={18} className={userLocation ? "text-blue-600" : "text-ink-500"} />
+          )}
+        </button>
+        {locationError && (
+          <div className="absolute bottom-12 left-0 w-44 rounded-lg bg-white border border-rose-200 px-2 py-1.5 text-[11px] text-rose-600 shadow-lg leading-tight">
+            {locationError}
+          </div>
+        )}
+      </div>
     </GoogleMap>
   );
 }
