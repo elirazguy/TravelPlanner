@@ -191,7 +191,12 @@ export async function runPlannerChat(tripId: string, messages: { role: string; c
 
     if (!res.ok) {
       const err = await res.text();
-      console.error("Gemini Planner Error:", err);
+      console.error("Gemini Planner Error:", res.status, err);
+      if (res.status === 401 || res.status === 403) {
+        throw new Error(
+          "מפתח ה-API של Gemini (GOOGLE_GEMINI_API_KEY) לא תקין או שפג תוקפו. הפק מפתח חדש בכתובת https://aistudio.google.com/app/apikey ועדכן אותו במשתני הסביבה של השרת."
+        );
+      }
       throw new Error(`AI Request failed: ${res.statusText}`);
     }
 

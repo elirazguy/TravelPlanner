@@ -70,6 +70,7 @@ export function Logistics({ trip }: { trip: TripDTO }) {
 // ── Hotels ──────────────────────────────────────────────────────────────────
 function HotelsSection({ trip }: { trip: TripDTO }) {
   const router = useRouter();
+  const [adding, setAdding] = useState(false);
 
   return (
     <div>
@@ -77,18 +78,21 @@ function HotelsSection({ trip }: { trip: TripDTO }) {
         <h2 className="flex items-center gap-2 text-lg font-bold text-ink-900">
           <HotelIcon size={18} /> לינה
         </h2>
+        <Button size="sm" variant="secondary" onClick={() => setAdding(true)}>
+          <Plus size={14} /> הוסף לינה ידנית
+        </Button>
       </div>
 
       <div className="mb-4 rounded-xl border border-blue-100 bg-blue-50/80 p-3 text-xs text-blue-800 flex items-center gap-2 font-medium">
         <HotelIcon size={16} className="shrink-0 text-blue-600" />
-        <span>נתוני הלינה נשאבים אוטומטית ממסמכי הטיול שאתה מעלה בדף "מסמכים" (תגית מלון).</span>
+        <span>נתוני הלינה נשאבים אוטומטית ממסמכי הטיול שאתה מעלה בדף "מסמכים" (תגית מלון), או שניתן להוסיף ידנית.</span>
       </div>
 
-      {trip.hotels.length === 0 && (
+      {trip.hotels.length === 0 && !adding && (
         <EmptyState
           icon={<HotelIcon size={32} />}
           title="לא נמצאו מלונות"
-          hint='העלה אישורי מלון בדף "מסמכים" (תגית מלון) לקליטה אוטומטית.'
+          hint='העלה אישורי מלון בדף "מסמכים" (תגית מלון) לקליטה אוטומטית, או הוסף ידנית.'
         />
       )}
 
@@ -103,7 +107,14 @@ function HotelsSection({ trip }: { trip: TripDTO }) {
             <HotelCard key={h.id} hotel={h} onChange={() => router.refresh()} />
           ))}
       </div>
-      
+
+      {adding && (
+        <HotelForm
+          tripId={trip.id}
+          onDone={() => { setAdding(false); router.refresh(); }}
+          onCancel={() => setAdding(false)}
+        />
+      )}
     </div>
   );
 }
@@ -295,6 +306,7 @@ function HotelForm({
 // ── Flights ─────────────────────────────────────────────────────────────────
 function FlightsSection({ trip }: { trip: TripDTO }) {
   const router = useRouter();
+  const [adding, setAdding] = useState(false);
 
   // Deduplicate flights by normalized flight number and date
   const uniqueFlights = trip.flights.filter((f, index, self) => {
@@ -318,6 +330,9 @@ function FlightsSection({ trip }: { trip: TripDTO }) {
         <h2 className="flex items-center gap-2 text-lg font-bold text-ink-900">
           <Plane size={18} /> טיסות
         </h2>
+        <Button size="sm" variant="secondary" onClick={() => setAdding(true)}>
+          <Plus size={14} /> הוסף טיסה ידנית
+        </Button>
       </div>
 
       <div className="mb-4 rounded-xl border border-emerald-100 bg-emerald-50/80 p-3 text-xs text-emerald-800 flex items-center gap-2 font-medium">
@@ -325,14 +340,14 @@ function FlightsSection({ trip }: { trip: TripDTO }) {
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
           <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
         </span>
-        <span>ניטור טיסות אוטומטי פעיל: המערכת מעדכנת אוטומטית את סטטוס הטיסה בזמן אמת מדי 5 דקות.</span>
+        <span>ניטור טיסות אוטומטי פעיל: המערכת מעדכנת אוטומטית את סטטוס הטיסה בזמן אמת מדי 5 דקות. ניתן גם להוסיף טיסה ידנית.</span>
       </div>
 
-      {uniqueFlights.length === 0 && (
+      {uniqueFlights.length === 0 && !adding && (
         <EmptyState
           icon={<Plane size={32} />}
           title="לא נמצאו טיסות"
-          hint='העלה כרטיסי טיסה בדף "מסמכים" (תגית טיסה) לקליטה וניטור אוטומטי.'
+          hint='העלה כרטיסי טיסה בדף "מסמכים" (תגית טיסה) לקליטה וניטור אוטומטי, או הוסף ידנית.'
         />
       )}
 
@@ -341,6 +356,14 @@ function FlightsSection({ trip }: { trip: TripDTO }) {
           <FlightCard key={f.id} flight={f} onChange={() => router.refresh()} />
         ))}
       </div>
+
+      {adding && (
+        <FlightForm
+          tripId={trip.id}
+          onDone={() => { setAdding(false); router.refresh(); }}
+          onCancel={() => setAdding(false)}
+        />
+      )}
     </div>
   );
 }
